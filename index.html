@@ -1,0 +1,1438 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Instagram">
+<meta name="theme-color" content="#ffffff">
+<link rel="apple-touch-icon" href="./icons/icon-512.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-192.png">
+<link rel="icon" type="image/png" href="./icons/icon-192.png">
+<link rel="manifest" href="./manifest.webmanifest">
+<title>Instagram</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; overscroll-behavior:none; }
+  body {
+    font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    background:#000; display:flex; justify-content:center; align-items:center; overflow:hidden;
+    overscroll-behavior:none;
+  }
+  #phone { --safe-b:0px; width:100%; max-width:430px; height:100vh; height:100dvh; max-height:930px; background:#fff;
+    position:relative; overflow:hidden; display:flex; flex-direction:column;
+    box-shadow:0 0 40px rgba(0,0,0,.4); }
+
+  /* 화면 전환 */
+  .screen { flex:1; display:none; flex-direction:column; overflow:hidden; }
+  .screen.active { display:flex; }
+  .scroll { flex:1; overflow-y:auto; min-height:0; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+
+  /* ── 공통 헤더 ── */
+  .ig-head { flex-shrink:0; height:50px; display:flex; align-items:center; padding:0 12px;
+    border-bottom:1px solid #efefef; gap:8px; }
+  .logo { font-family:"Billabong","Snell Roundhand","Segoe Script","Apple Chancery",cursive;
+    font-size:30px; line-height:1; font-weight:500; color:#262626; letter-spacing:.2px;
+    padding-bottom:4px; }
+  .ig-head .hicon { width:26px; height:26px; color:#262626; }
+
+  /* ── 홈 헤더 (좌:＋ / 중앙:로고 / 우:노트·하트) ── */
+  .feed-head { position:relative; justify-content:space-between; padding:0 10px; }
+  .feed-head .logo { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    user-select:none; -webkit-user-select:none; cursor:default; display:flex; align-items:center; }
+  .feed-head .logo img { height:30px; width:auto; max-width:210px; object-fit:contain; display:block; }
+  .hbtn { position:relative; background:none; border:none; padding:0; width:36px; height:36px;
+    display:flex; align-items:center; justify-content:center; color:#262626; cursor:pointer; }
+  .hbtn svg { width:26px; height:26px; display:block; }
+  .head-right { display:flex; align-items:center; gap:2px; margin-left:auto; z-index:1; }
+  .feed-head #btnPlus { z-index:1; }
+  .badge-dot { position:absolute; top:4px; right:4px; width:9px; height:9px; border-radius:50%;
+    background:#ff3040; border:1.5px solid #fff; }
+  .ig-head .back { width:30px; font-size:26px; color:#262626; background:none; border:none; cursor:pointer; }
+  .ig-head .htitle { flex:1; font-size:16px; font-weight:600; color:#262626; }
+  .ig-head .htitle small { display:block; font-size:11px; color:#8e8e8e; font-weight:400; }
+
+  /* ── 스토리 ── */
+  .stories { display:flex; gap:14px; padding:12px 14px; overflow-x:auto; border-bottom:1px solid #efefef; }
+  .stories::-webkit-scrollbar{ display:none; }
+  .story { flex-shrink:0; width:64px; text-align:center; cursor:pointer; }
+  .story-ring { width:62px; height:62px; border-radius:50%; padding:2.5px;
+    background:linear-gradient(45deg,#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5); }
+  .story-ring.seen { background:#dbdbdb; }
+  .story-ring > div { width:100%; height:100%; border-radius:50%; overflow:hidden; border:2px solid #fff;
+    background:#efefef; }
+  .story-ring img { width:100%; height:100%; object-fit:cover; }
+  .story-name { font-size:11px; color:#262626; margin-top:4px; white-space:nowrap; overflow:hidden;
+    text-overflow:ellipsis; }
+  .story.mine { position:relative; }
+  .story.mine .story-ring { background:#dbdbdb; }
+  .story .add-badge { position:absolute; left:42px; top:40px; width:22px; height:22px; border-radius:50%;
+    background:#0095f6; border:2px solid #fff; color:#fff; display:flex; align-items:center;
+    justify-content:center; font-size:15px; line-height:1; font-weight:600; }
+
+  /* ── 게시물 카드 ── */
+  .post { border-bottom:1px solid #efefef; }
+  .post-head { display:flex; align-items:center; padding:9px 12px; gap:9px; }
+  .av { border-radius:50%; overflow:hidden; flex-shrink:0; background:#efefef; }
+  .av img { width:100%; height:100%; object-fit:cover; }
+  .av.ring { padding:2px; background:linear-gradient(45deg,#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5); }
+  .av.ring.seen { background:#dbdbdb; }
+  .av.ring > div { width:100%; height:100%; border-radius:50%; overflow:hidden; border:2px solid #fff; background:#efefef; }
+  .post-user { flex:1; min-width:0; display:flex; align-items:center; gap:4px; }
+  .uname { font-size:13.5px; font-weight:600; color:#262626; white-space:nowrap; overflow:hidden;
+    text-overflow:ellipsis; }
+  .verified { width:13px; height:13px; flex-shrink:0; }
+  .post-menu { font-size:20px; color:#262626; padding:0 4px; }
+  .post-img { width:100%; aspect-ratio:1/1; background:#efefef; object-fit:cover; display:block; }
+  .post-img.tall { aspect-ratio:4/5; }
+  .post-actions { display:flex; align-items:center; padding:8px 12px 4px; gap:15px; }
+  .post-actions .ico { width:25px; height:25px; color:#262626; cursor:pointer; }
+  .post-actions .ico.liked { color:#ed4956; }
+  .post-actions .spacer { flex:1; }
+  .post-likes { padding:2px 12px; font-size:13.5px; font-weight:600; color:#262626; }
+  .post-caption { padding:3px 12px; font-size:13.5px; color:#262626; line-height:1.4; }
+  .post-caption b { font-weight:600; }
+  .post-comments-link { padding:3px 12px; font-size:13.5px; color:#8e8e8e; }
+  .post-time { padding:3px 12px 12px; font-size:10.5px; color:#8e8e8e; text-transform:uppercase; letter-spacing:.3px; }
+
+  /* ── 게시물 상세 댓글 ── */
+  .comment { display:flex; gap:10px; padding:7px 14px; align-items:flex-start; }
+  .comment .cbody { flex:1; font-size:13.5px; color:#262626; line-height:1.45; }
+  .comment .cbody b { font-weight:600; }
+  .comment .cmeta { font-size:11px; color:#8e8e8e; margin-top:3px; }
+  .comment .clike { font-size:16px; color:#8e8e8e; padding-top:2px; }
+  .detail-caption { display:flex; gap:10px; padding:12px 14px; align-items:flex-start; border-bottom:1px solid #efefef; }
+
+  /* ── 프로필 ── */
+  .prof-top { display:flex; align-items:center; padding:16px 16px 8px; gap:22px; }
+  .prof-av { width:82px; height:82px; border-radius:50%; overflow:hidden; flex-shrink:0; background:#efefef; }
+  .prof-av img { width:100%; height:100%; object-fit:cover; }
+  .prof-stats { flex:1; display:flex; justify-content:space-around; text-align:center; }
+  .prof-stats .num { font-size:17px; font-weight:700; color:#262626; }
+  .prof-stats .lbl { font-size:13px; color:#262626; }
+  .prof-name { padding:2px 16px; font-size:13.5px; font-weight:600; color:#262626; }
+  .prof-bio { padding:2px 16px 12px; font-size:13.5px; color:#262626; line-height:1.45; white-space:pre-wrap; }
+  .prof-btns { display:flex; gap:6px; padding:4px 16px 14px; }
+  .prof-btns button { flex:1; height:32px; border-radius:8px; border:none; font-size:13.5px; font-weight:600;
+    cursor:pointer; }
+  .btn-follow { background:#0095f6; color:#fff; }
+  .btn-gray { background:#efefef; color:#262626; }
+  .grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:2px; }
+  .grid-item { aspect-ratio:1/1; background:#efefef; overflow:hidden; cursor:pointer; position:relative; }
+  .grid-item img { width:100%; height:100%; object-fit:cover; display:block; }
+  .grid-tabs { display:flex; border-top:1px solid #efefef; }
+  .grid-tabs > div { flex:1; display:flex; justify-content:center; padding:10px 0; color:#262626; }
+  .grid-tabs > div.off { color:#c7c7c7; }
+  .grid-tabs svg { width:24px; height:24px; }
+
+  /* ── DM 목록 ── */
+  .dmlist-head { flex-shrink:0; position:relative; height:52px; display:flex; align-items:center;
+    justify-content:center; padding:0 12px; }
+  .dmlist-title { display:flex; align-items:center; gap:6px; font-size:17px; font-weight:700; color:#262626; }
+  .dmlist-title .chev { width:16px; height:16px; }
+  .dmlist-title .reddot { width:8px; height:8px; border-radius:50%; background:#ff3040; display:inline-block; }
+  .dmlist-compose { position:absolute; right:12px; top:50%; transform:translateY(-50%); color:#262626;
+    display:flex; }
+  .dmlist-compose svg { width:26px; height:26px; }
+  .dm-searchwrap { flex-shrink:0; padding:4px 14px 10px; }
+  .dm-search { height:40px; border-radius:12px; background:#efefef; display:flex; align-items:center;
+    gap:10px; padding:0 14px; }
+  .dm-search svg { width:18px; height:18px; flex-shrink:0; }
+  .dm-search span { font-size:15px; color:#8e8e8e; }
+  .dm-sectionhead { flex-shrink:0; display:flex; align-items:center; justify-content:space-between;
+    padding:2px 16px 8px; }
+  .dm-sectionhead b { font-size:15px; color:#262626; }
+  .dm-sectionhead span { font-size:14px; color:#0095f6; font-weight:600; }
+
+  .dm-item { display:flex; align-items:center; padding:8px 16px; gap:13px; cursor:pointer; }
+  .dm-meta { flex:1; min-width:0; }
+  .dm-name { font-size:15px; font-weight:600; color:#262626; }
+  .dm-last { font-size:14px; color:#8e8e8e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:3px; }
+
+  /* ── DM 대화 ── */
+  .dmthread-head { flex-shrink:0; height:58px; display:flex; align-items:center; gap:10px; padding:0 12px;
+    background:#fff; }
+  .dmt-back { background:none; border:none; padding:0; width:28px; height:28px; color:#262626; cursor:pointer;
+    display:flex; align-items:center; }
+  .dmt-back svg { width:26px; height:26px; }
+  .dmt-name { flex:1; min-width:0; font-size:16px; font-weight:700; color:#262626; display:flex;
+    align-items:center; gap:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .dmt-name .after { font-weight:500; color:#262626; }
+  .dmt-ico { color:#262626; display:flex; flex-shrink:0; }
+  .dmt-ico svg { width:26px; height:26px; }
+  .dm-thread { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:3px;
+    overscroll-behavior:contain; }
+  .dm-row { display:flex; margin-bottom:2px; align-items:flex-end; gap:8px; max-width:100%; }
+  .dm-row.mine { flex-direction:row-reverse; }
+  .dm-bubble { max-width:70%; padding:9px 13px; border-radius:20px; font-size:14px; line-height:1.35;
+    word-break:break-word; white-space:pre-wrap; }
+  .dm-row:not(.mine) .dm-bubble { background:#efefef; color:#262626; }
+  .dm-row.mine .dm-bubble { background:linear-gradient(135deg,#4f5bd5,#962fbf,#d62976); color:#fff; }
+  .dm-row .dm-av { width:26px; height:26px; border-radius:50%; overflow:hidden; flex-shrink:0; background:#efefef; }
+  .dm-row .dm-av img{ width:100%; height:100%; object-fit:cover; }
+  .dm-img { max-width:62%; border-radius:18px; overflow:hidden; }
+  .dm-img img { width:100%; display:block; }
+  /* 사진 옆 공유(비행기) 아이콘 */
+  .dm-share { width:34px; height:34px; border-radius:50%; background:#efefef; display:flex;
+    align-items:center; justify-content:center; flex-shrink:0; align-self:center; }
+  .dm-share svg { width:18px; height:18px; color:#262626; }
+  /* 가운데 날짜·시간 구분선 */
+  .dm-stamp { text-align:center; font-size:12.5px; color:#8e8e8e; padding:14px 10px 10px; }
+
+  .dm-inputbar { flex-shrink:0; display:flex; align-items:center; gap:9px;
+    padding:8px 12px calc(10px + env(safe-area-inset-bottom, 0px) + var(--safe-b)); background:#fff; }
+  .dm-cam { width:40px; height:40px; border-radius:50%; flex-shrink:0; display:flex; align-items:center;
+    justify-content:center; background:#3797f0; }
+  .dm-cam svg { width:23px; height:23px; }
+  .dm-field { flex:1; min-width:0; height:44px; border-radius:22px; background:#f1f2f4; display:flex;
+    align-items:center; gap:12px; padding:0 14px; }
+  .dm-field .ph { flex:1; min-width:0; color:#8e8e8e; font-size:15px; white-space:nowrap; overflow:hidden; }
+  .dm-fico { color:#262626; display:flex; flex-shrink:0; }
+  .dm-fico svg { width:23px; height:23px; }
+
+  /* ── 하단 탭바 ── */
+  .tabbar { flex-shrink:0; display:flex; align-items:stretch; border-top:1px solid #efefef;
+    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + var(--safe-b)); background:#fff; }
+  .tab { flex:1; display:flex; align-items:center; justify-content:center; min-height:50px; color:#262626;
+    cursor:pointer; position:relative; }
+  .tab svg { width:26px; height:26px; }
+  .tab .tav { width:26px; height:26px; border-radius:50%; overflow:hidden; border:1px solid #262626; }
+  .tab .tav img { width:100%; height:100%; object-fit:cover; }
+  .tab .tab-dot { position:absolute; bottom:11px; right:calc(50% - 17px); width:9px; height:9px;
+    border-radius:50%; background:#ff3040; border:1.5px solid #fff; }
+
+  .empty { padding:50px 30px; text-align:center; color:#8e8e8e; font-size:14px; line-height:1.7; }
+
+  /* ── 관리자 ── */
+  #adminOverlay { display:none; position:absolute; inset:0; background:#f4f5f7; z-index:50; flex-direction:column; }
+  #adminOverlay.active { display:flex; }
+  .admin-header { background:#262626; color:#fff; padding:14px 16px; display:flex; align-items:center;
+    justify-content:space-between; flex-shrink:0; }
+  .admin-header h2 { font-size:17px; }
+  .admin-header .row-actions { display:flex; gap:8px; }
+  .admin-header button { background:rgba(255,255,255,.16); color:#fff; border:none; padding:8px 13px;
+    border-radius:8px; font-size:14px; cursor:pointer; font-weight:600; }
+  .admin-body { flex:1; overflow-y:auto; padding:14px; }
+  .admin-tabs { display:flex; gap:6px; margin-bottom:14px; }
+  .admin-tabs button { flex:1; padding:10px 4px; border:none; border-radius:9px; background:#e6e8eb;
+    color:#3a4a5a; font-weight:700; font-size:13px; cursor:pointer; }
+  .admin-tabs button.on { background:#262626; color:#fff; }
+  .asec { background:#fff; border-radius:12px; padding:15px; margin-bottom:12px; }
+  .asec h3 { font-size:14px; color:#262626; margin-bottom:12px; display:flex; align-items:center;
+    justify-content:space-between; }
+  .field { margin-bottom:11px; }
+  .field label { display:block; font-size:12.5px; color:#6a7a8a; margin-bottom:5px; font-weight:600; }
+  .field input, .field textarea, .field select { width:100%; border:1px solid #d5dae0; border-radius:8px;
+    padding:9px 11px; font-size:14px; font-family:inherit; background:#fff; }
+  .field textarea { resize:vertical; min-height:52px; }
+  .frow { display:flex; gap:8px; }
+  .frow > * { flex:1; }
+  .btn { border:none; border-radius:8px; padding:10px 13px; font-size:14px; font-weight:600; cursor:pointer; }
+  .btn-primary { background:#0095f6; color:#fff; }
+  .btn-dark { background:#262626; color:#fff; }
+  .btn-ghost { background:#eef0f3; color:#3a4a5a; }
+  .btn-danger { background:#ffe5e3; color:#d63a2f; }
+  .btn-sm { padding:6px 10px; font-size:12.5px; }
+  .btn-block { width:100%; margin-top:6px; }
+  .alist-item { border:1px solid #e3e7ec; border-radius:10px; padding:11px; margin-bottom:9px; }
+  .alist-item .top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .alist-item .nm { font-weight:700; font-size:14px; color:#2a3a4a; }
+  .alist-item .sub { font-size:12px; color:#8a97a5; margin-top:2px; }
+  .row-actions { display:flex; gap:6px; }
+  .thumb-pick { width:56px; height:56px; border-radius:10px; overflow:hidden; background:#e9ecef; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; color:#adb5bd; font-size:11px; cursor:pointer; }
+  .thumb-pick img { width:100%; height:100%; object-fit:cover; }
+  .thumb-pick.circle { border-radius:50%; }
+  .hint { font-size:12px; color:#98a5b2; line-height:1.6; margin-top:8px; }
+  .sub-item { border:1px solid #e3e7ec; border-radius:9px; padding:9px; margin-bottom:8px; background:#fafbfc; }
+
+  /* ── 스토리 뷰어 (손님 모드) ── */
+  #storyScreen { background:#000; }
+  .story-bars { display:flex; gap:3px; padding:6px 10px 0; flex-shrink:0; }
+  .story-bars > div { flex:1; height:2.5px; border-radius:2px; background:rgba(255,255,255,.35); }
+  .story-bars > div.on { background:#fff; }
+  .story-top { display:flex; align-items:center; gap:9px; padding:10px 12px 8px; flex-shrink:0; }
+  .story-top .sav { width:32px; height:32px; border-radius:50%; overflow:hidden; background:#333; flex-shrink:0; }
+  .story-top .sav img { width:100%; height:100%; object-fit:cover; }
+  .story-top .sname { font-size:14px; font-weight:600; color:#fff; display:flex; align-items:center; gap:4px; }
+  .story-top .stime { font-size:13px; color:rgba(255,255,255,.7); }
+  .story-top .sdots { margin-left:auto; color:#fff; font-size:20px; line-height:1; padding:0 4px; }
+  .story-body { flex:1; min-height:0; display:flex; align-items:center; justify-content:center;
+    overflow:hidden; position:relative; }
+  .story-body img { width:100%; height:100%; object-fit:contain; display:block; }
+  .story-nav { position:absolute; inset:0; display:flex; }
+  .story-nav > div { flex:1; }
+  .story-bottom { flex-shrink:0; display:flex; align-items:center; gap:14px;
+    padding:12px 14px calc(12px + env(safe-area-inset-bottom, 0px) + var(--safe-b)); }
+  .story-bottom .sfake { flex:1; height:44px; border:1px solid rgba(255,255,255,.55); border-radius:22px;
+    display:flex; align-items:center; padding:0 18px; color:#fff; font-size:14px; }
+  .story-bottom svg { width:26px; height:26px; color:#fff; flex-shrink:0; }
+
+  .toast { position:absolute; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,.82);
+    color:#fff; padding:10px 18px; border-radius:20px; font-size:13px; z-index:100; opacity:0;
+    transition:opacity .25s; pointer-events:none; }
+  .toast.show { opacity:1; }
+  #confirmBox { display:none; position:absolute; inset:0; z-index:120; background:rgba(0,0,0,.4);
+    align-items:center; justify-content:center; padding:30px; }
+  #confirmBox.show { display:flex; }
+  .confirm-card { background:#fff; border-radius:14px; padding:22px 20px 16px; width:100%; max-width:300px; }
+  .confirm-msg { font-size:15px; color:#262626; line-height:1.5; margin-bottom:18px; text-align:center;
+    white-space:pre-line; }
+  .confirm-actions { display:flex; gap:8px; }
+  .confirm-actions .btn { flex:1; padding:11px; }
+  .mode-pill { position:absolute; top:26px; right:12px; z-index:40; background:rgba(0,0,0,.4); color:#fff;
+    font-size:11px; padding:3px 9px; border-radius:10px; display:none; }
+  .mode-pill.show { display:block; }
+</style>
+</head>
+<body>
+<div id="phone">
+  <div class="mode-pill" id="modePill">관리자 모드</div>
+
+  <!-- 홈 피드 -->
+  <div class="screen active" id="feedScreen">
+    <div class="ig-head feed-head">
+      <button class="hbtn" id="btnPlus" aria-label="만들기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4.5v15M4.5 12h15"/></svg>
+      </button>
+      <div class="logo" id="feedLogo"><span class="logo-text">Instagram</span></div>
+      <div class="head-right">
+        <button class="hbtn" id="btnNotes" aria-label="노트">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.2" y="2.8" width="17.6" height="18.4" rx="4.5"/><path d="M12 7.2l1.45 2.95 3.25.47-2.35 2.29.55 3.24L12 14.62l-2.9 1.53.55-3.24-2.35-2.29 3.25-.47z"/></svg>
+        </button>
+        <button class="hbtn" id="btnActivity" aria-label="활동">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11z"/></svg>
+          <span class="badge-dot"></span>
+        </button>
+      </div>
+    </div>
+    <div class="scroll" id="feedScroll"></div>
+    <div class="tabbar" id="tabbarFeed"></div>
+  </div>
+
+  <!-- 게시물 상세 -->
+  <div class="screen" id="postScreen">
+    <div class="ig-head">
+      <button class="back" data-back>‹</button>
+      <div class="htitle">게시물</div>
+    </div>
+    <div class="scroll" id="postScroll"></div>
+  </div>
+
+  <!-- 프로필 -->
+  <div class="screen" id="profileScreen">
+    <div class="ig-head">
+      <button class="back" data-back id="profBack" style="display:none">‹</button>
+      <div class="htitle" id="profHeadName">프로필</div>
+    </div>
+    <div class="scroll" id="profileScroll"></div>
+    <div class="tabbar" id="tabbarProfile"></div>
+  </div>
+
+  <!-- DM 목록 -->
+  <div class="screen" id="dmListScreen">
+    <div class="dmlist-head">
+      <div class="dmlist-title"><span id="dmListTitle">사용자</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg><i class="reddot"></i></div>
+      <span class="dmlist-compose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M20 13.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.5"/><path d="M17.4 3.6a2 2 0 0 1 2.8 2.8L12.8 13.8l-3.6.8.8-3.6z"/></svg>
+      </span>
+    </div>
+    <div class="dm-searchwrap"><div class="dm-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#8e8e8e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <span>검색</span>
+    </div></div>
+    <div class="dm-sectionhead"><b>메시지</b><span>요청</span></div>
+    <div class="scroll" id="dmListScroll"></div>
+    <div class="tabbar" id="tabbarDM"></div>
+  </div>
+
+  <!-- DM 대화 -->
+  <div class="screen" id="dmThreadScreen">
+    <div class="dmthread-head">
+      <button class="dmt-back" data-back>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4"/><path d="m10 6-6 6 6 6"/></svg>
+      </button>
+      <div class="av" id="dmThreadAv" style="width:34px;height:34px"></div>
+      <div class="dmt-name" id="dmThreadName"></div>
+      <span class="dmt-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M16 21A13 13 0 0 1 3 8V5.5A1.5 1.5 0 0 1 4.5 4h2.8a1 1 0 0 1 1 .8l.66 3a1 1 0 0 1-.28.93L7.1 10.3a11.5 11.5 0 0 0 6.6 6.6l1.57-1.58a1 1 0 0 1 .93-.27l3 .65a1 1 0 0 1 .8 1v2.8A1.5 1.5 0 0 1 18.5 21z"/></svg>
+      </span>
+      <span class="dmt-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="2.5" y="6" width="13.5" height="12" rx="3.2"/><path d="m16 11.3 5.5-3.1v7.6L16 12.7z"/></svg>
+      </span>
+    </div>
+    <div class="dm-thread" id="dmThreadScroll"></div>
+    <div class="dm-inputbar">
+      <span class="dm-cam">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.8l1.1-1.8h6.2L15.7 6h2.8A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/><circle cx="12" cy="12.3" r="3.4"/></svg>
+      </span>
+      <div class="dm-field">
+        <span class="ph">메시지 보내기...</span>
+        <span class="dm-fico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5 11.5a7 7 0 0 0 14 0M12 18.5V21"/></svg></span>
+        <span class="dm-fico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="3"/><circle cx="8.6" cy="10" r="1.6"/><path d="m4 17 5-4.2 3.4 2.8 3-2.4L20 17"/></svg></span>
+        <span class="dm-fico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20.5 4.5H6a2.5 2.5 0 0 0-2.5 2.5v10A2.5 2.5 0 0 0 6 19.5h7.5l7-7z"/><path d="M13.5 19.5v-4.2a2 2 0 0 1 2-2h4.2"/><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+        <span class="dm-fico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 스토리 뷰어 -->
+  <div class="screen" id="storyScreen">
+    <div class="story-bars" id="storyBars"></div>
+    <div class="story-top">
+      <div class="sav" id="storyAv"></div>
+      <div class="sname" id="storyName"></div>
+      <div class="stime" id="storyTime"></div>
+      <div class="sdots">⋮</div>
+    </div>
+    <div class="story-body" id="storyBody">
+      <div class="story-nav"><div data-snav="prev"></div><div data-snav="next"></div></div>
+    </div>
+    <div class="story-bottom">
+      <div class="sfake">메시지 보내기</div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-11.7 7.7L3 21l1.9-5.6A8.4 8.4 0 1 1 21 11.5z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+    </div>
+  </div>
+
+  <!-- 관리자 패널 -->
+  <div id="adminOverlay">
+    <div class="admin-header">
+      <h2>관리자</h2>
+      <div class="row-actions">
+        <button id="adminGuest">손님 모드</button>
+        <button id="adminClose">닫기</button>
+      </div>
+    </div>
+    <div class="admin-body" id="adminBody"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div id="confirmBox"><div class="confirm-card">
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" id="confirmNo">취소</button>
+      <button class="btn btn-danger" id="confirmYes">삭제</button>
+    </div>
+  </div></div>
+</div>
+
+<script>
+/* =========================================================================
+   단서 인스타 — 크라임씬용 보기 전용 가짜 인스타그램
+   관리자 진입: 홈 상단 왼쪽 ＋ 버튼 5초 길게 누르기
+
+   데이터 규칙: 파일에 내장된 DATA_VERSION 이 바뀌면(=새 파일 설치)
+   폰에 저장된 내용을 지우고 파일 내용으로 초기화한다.
+   같은 버전이면 폰에서 수정한 내용이 항상 우선.
+   ========================================================================= */
+
+/*__CS_DATA_START__ 아래 두 줄이 이 파일에 들어있는 내용입니다. */
+const DATA_VERSION = "2026-09-11-150000";
+const EMBEDDED_DATA = {
+ "logo": "",
+ "bottomPad": 0,
+ "users": [
+  {"id":"u_me","username":"yujin_kim","name":"김유진","avatar":"","bio":"📸 일상 기록\n서울 · 대학생","followers":842,"following":311,"verified":false,"isMain":true,"storyImage":"","storyTime":""},
+  {"id":"u_a","username":"seoyeon_p","name":"박서연","avatar":"","bio":"커피와 산책","followers":1203,"following":405,"verified":false,"isMain":false,"storyImage":"","storyTime":"18시간"},
+  {"id":"u_b","username":"jiho.official","name":"이지호","avatar":"","bio":"","followers":5820,"following":180,"verified":true,"isMain":false,"storyImage":"","storyTime":"13시간"}
+ ],
+ "posts": [
+  {"id":"p_1","userId":"u_b","image":"","caption":"그날 밤 모임. 다들 어디 있었더라?","likes":214,"liked":true,"time":"3시간 전",
+   "comments":[{"id":"c_1","userId":"u_a","text":"나 그때 집이었는데ㅋㅋ"},{"id":"c_2","userId":"u_me","text":"사진 흔들렸다ㅜ"}]},
+  {"id":"p_2","userId":"u_a","image":"","caption":"혼자 마시는 커피 한잔 ☕","likes":88,"liked":false,"time":"어제",
+   "comments":[{"id":"c_3","userId":"u_b","text":"어디야 거기?"}]}
+ ],
+ "dms": [
+  {"id":"d_1","userId":"u_a","messages":[
+   {"id":"m_1","fromMe":false,"text":"너 어제 그거 봤어?","image":"","time":"오후 11:02"},
+   {"id":"m_2","fromMe":true,"text":"뭘?","image":"","time":"오후 11:03"},
+   {"id":"m_3","fromMe":false,"text":"아니야… 나중에 얘기하자","image":"","time":"오후 11:05"}
+  ]}
+ ]
+};
+/*__CS_DATA_END__*/
+
+const $ = s => document.querySelector(s);
+const STORE = 'crimescene_insta_v1';
+let data = null;              /* 아래 “초기화” 구간에서 load() 로 채운다 */
+let isAdmin = false;
+let adminTab = 'posts';
+let profileUserId = null;   // 현재 보고 있는 프로필
+
+function id(){ return 'x'+Math.random().toString(36).slice(2,9); }
+function esc(s){ return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1600); }
+function confirmDialog(msg,onYes){ const b=$('#confirmBox'); $('#confirmMsg').textContent=msg; b.classList.add('show');
+  const y=$('#confirmYes'),n=$('#confirmNo'); const c=()=>{b.classList.remove('show');y.onclick=null;n.onclick=null;};
+  y.onclick=()=>{c();onYes&&onYes();}; n.onclick=c; }
+function fmtNum(n){ n=Number(n)||0; return n.toLocaleString('en-US'); }
+
+/* 파일에 들어있는 내용의 지문.
+   DATA_VERSION 을 고치지 않고 내용만 바꿔도 “새 파일”로 인식하게 해준다. */
+function fingerprint(o){
+  let s;
+  try{ s = JSON.stringify(o); }catch(e){ return 'x'; }
+  let h = 0x811c9dc5;
+  for(let i=0;i<s.length;i++){
+    h = (h ^ s.charCodeAt(i)) >>> 0;
+    h = (h * 0x01000193) >>> 0;
+  }
+  return h.toString(36) + '-' + s.length.toString(36);
+}
+const DATA_FP = fingerprint(EMBEDDED_DATA);
+function deepCopy(o){ return JSON.parse(JSON.stringify(o)); }
+function storedBox(){ try{ return JSON.parse(localStorage.getItem(STORE)); }catch(e){ return null; } }
+function wipeStored(){ try{ localStorage.removeItem(STORE); }catch(e){} }
+
+/* 파일에서 막 읽어온 상태의 지문. 이후 내용이 달라지면 “이 기기에만 저장된 수정”이다 */
+let baseFp = null;
+
+function load(){
+  const box = storedBox();
+  if(box && box.data && box.version === DATA_VERSION && box.fp === DATA_FP){
+    baseFp = box.base || null;
+    return normalize(box.data);
+  }
+  wipeStored();
+  const fresh = normalize(deepCopy(EMBEDDED_DATA));
+  baseFp = fingerprint(fresh);
+  return fresh;
+}
+function hasLocalEdits(){ return !!baseFp && fingerprint(data) !== baseFp; }
+function save(){
+  try{
+    localStorage.setItem(STORE, JSON.stringify({
+      version: DATA_VERSION, fp: DATA_FP, base: baseFp, savedAt: new Date().toISOString(), data: data
+    }));
+    return true;
+  }catch(e){
+    toast('저장 공간이 부족합니다. 사진을 줄이거나 내보내기로 백업하세요.');
+    return false;
+  }
+}
+function storageKB(){
+  try{ return Math.round(JSON.stringify(data).length/1024); }catch(e){ return 0; }
+}
+
+/* 구버전 데이터 보정: 내 계정 1개 보장 + 스토리 필드 기본값 */
+function normalize(d){
+  d.users = d.users || []; d.posts = d.posts || []; d.dms = d.dms || [];
+  if(!d.users.length) d.users.push({id:id(),username:'my_account',name:'',avatar:'',bio:'',followers:0,following:0,verified:false,isMain:true});
+  let seen=false;
+  d.users.forEach(u=>{
+    if(u.isMain){ if(seen) u.isMain=false; else seen=true; }
+    if(u.storyImage===undefined) u.storyImage='';
+    if(u.storyTime===undefined) u.storyTime='';
+  });
+  if(!seen) d.users[0].isMain=true;
+  d.dms.forEach(dm=>{
+    (dm.messages||[]).forEach(m=>{ if(m.date===undefined) m.date=''; });
+  });
+  return d;
+}
+/* 내 계정을 제외한 계정 = 스토리 목록 */
+function storyUsers(){ return data.users.filter(u=>!u.isMain); }
+/* 실제로 스토리 사진이 올라간 계정만 열람 가능 */
+function liveStories(){ return storyUsers().filter(u=>u.storyImage); }
+
+/* ---------- 상단 로고 ----------
+   1순위: 관리자에서 올린 이미지  2순위: 같은 폴더의 logo.png  3순위: 기본 필기체 */
+const LOGO_FILE = './logo.png';
+function applyLogo(){
+  const box=$('#feedLogo'); if(!box) return;
+  box.innerHTML = `<span class="logo-text">Instagram</span>`;
+  const src = data.logo || LOGO_FILE;
+  const im = new Image();
+  im.alt = 'Instagram';
+  im.onload = ()=>{ box.innerHTML=''; box.appendChild(im); };
+  im.onerror = ()=>{ /* 파일 없음 → 기본 필기체 유지 */ };
+  im.src = src;
+}
+
+function userById(uid){ return data.users.find(u=>u.id===uid); }
+function mainUser(){ return data.users.find(u=>u.isMain) || data.users[0]; }
+
+/* ---------- 아바타 ---------- */
+function avatarHTML(u, size, ring){
+  const inner = (u && u.avatar) ? `<img src="${u.avatar}">` : defaultAvatar();
+  /* 링을 그릴 때 : 스토리 사진이 있으면 컬러, 없으면 회색 */
+  if(ring){
+    const seen = (u && u.storyImage) ? '' : ' seen';
+    return `<div class="av ring${seen}" style="width:${size}px;height:${size}px"><div>${inner}</div></div>`;
+  }
+  return `<div class="av" style="width:${size}px;height:${size}px">${inner}</div>`;
+}
+function defaultAvatar(){
+  return `<svg viewBox="0 0 100 100" style="width:100%;height:100%;display:block"><rect width="100" height="100" fill="#e4e6eb"/><circle cx="50" cy="40" r="17" fill="#b9c0c8"/><path d="M50 60c-18 0-30 13-32 32h64c-2-19-14-32-32-32z" fill="#b9c0c8"/></svg>`;
+}
+const verifiedBadge = `<svg class="verified" viewBox="0 0 24 24"><path fill="#3897f0" d="M12 2l2.4 1.8 3-.2 1 2.8 2.6 1.5-.8 2.9.8 2.9-2.6 1.5-1 2.8-3-.2L12 22l-2.4-1.8-3 .2-1-2.8L3 16.3l.8-2.9L3 10.5l2.6-1.5 1-2.8 3 .2L12 2z"/><path fill="#fff" d="M10.6 14.6l-2.2-2.2-1.2 1.2 3.4 3.4 5.6-5.6-1.2-1.2z"/></svg>`;
+
+/* ================= 화면 전환 ================= */
+function showScreen(nm, push){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $('#'+nm).classList.add('active');
+  if(push) history.pushState({s:nm},'');
+}
+
+/* ---------- 하단 탭바 (홈 · 릴스 · DM · 검색 · 프로필) ---------- */
+function tabHome(on){
+  return `<svg viewBox="0 0 24 24" fill="${on?'#262626':'none'}" stroke="#262626" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg>`;
+}
+function tabReels(on){
+  return `<svg viewBox="0 0 24 24" fill="${on?'#262626':'none'}" stroke="#262626" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4.5"/><path d="M3 8.5h18M9 3l2.6 5.5M15.2 3l2.6 5.5" stroke="${on?'#fff':'#262626'}"/><path d="M10.2 11.8v5.4l4.7-2.7z" fill="${on?'#fff':'#262626'}" stroke="none"/></svg>`;
+}
+function tabDM(on){
+  return `<svg viewBox="0 0 24 24" fill="${on?'#262626':'none'}" stroke="#262626" stroke-width="1.8" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>`;
+}
+function tabSearch(on){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="${on?'2.8':'1.9'}" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`;
+}
+function tabbarHTML(active){
+  const mu = mainUser();
+  const avImg = (mu && mu.avatar) ? `<img src="${mu.avatar}">` : defaultAvatar();
+  return `
+    <div class="tab" data-tab="feed">${tabHome(active==='feed')}</div>
+    <div class="tab" data-tab="reels">${tabReels(active==='reels')}</div>
+    <div class="tab" data-tab="dm">${tabDM(active==='dm')}</div>
+    <div class="tab" data-tab="search">${tabSearch(active==='search')}</div>
+    <div class="tab" data-tab="profile"><div class="tav" style="${active==='profile'?'border-width:2px':''}">${avImg}</div><span class="tab-dot"></span></div>`;
+}
+function wireTabbar(bar){
+  bar.querySelectorAll('[data-tab]').forEach(t=>{
+    const k0 = t.dataset.tab;
+    if(k0==='reels' || k0==='search'){ t.style.cursor='default'; return; }
+    t.onclick = ()=>{
+      const k = t.dataset.tab;
+      if(k==='feed') navFeed();
+      else if(k==='profile') navProfile(mainUser().id, false);
+      else if(k==='dm') navDMList();
+      // 릴스·검색: 반응 없음
+    };
+  });
+}
+
+/* ================= 홈 피드 ================= */
+function navFeed(){ showScreen('feedScreen', true); renderFeed(); }
+function applyBottomPad(){
+  const px = Math.max(0, Number(data.bottomPad)||0);
+  document.getElementById('phone').style.setProperty('--safe-b', px+'px');
+}
+function renderFeed(){
+  applyBottomPad();
+  const box = $('#feedScroll'); box.innerHTML='';
+  // 스토리
+  const stories = document.createElement('div'); stories.className='stories';
+  const me = mainUser();
+  const ordered = me ? [me, ...storyUsers()] : data.users.slice();
+  ordered.forEach(u=>{
+    const mine = !!(me && u===me);
+    const has = !!u.storyImage;                       // 스토리 사진이 있어야 열람 가능
+    const el = document.createElement('div'); el.className='story'+(mine?' mine':'');
+    const inner = u.avatar?`<img src="${u.avatar}">`:defaultAvatar();
+    el.innerHTML = `<div class="story-ring${has?'':' seen'}"><div>${inner}</div></div>${mine?'<span class="add-badge">＋</span>':''}<div class="story-name">${mine?'내 스토리':esc(u.username)}</div>`;
+    if(mine) el.onclick = ()=> navProfile(u.id, true);
+    else if(has) el.onclick = ()=> navStory(u.id);    // 사진 없으면 회색 링 + 반응 없음
+    else el.style.cursor='default';
+    stories.appendChild(el);
+  });
+  box.appendChild(stories);
+
+  const tb=$('#tabbarFeed'); tb.innerHTML=tabbarHTML('feed'); wireTabbar(tb);
+
+  if(!data.posts.length){
+    const e=document.createElement('div'); e.className='empty';
+    e.innerHTML='게시물이 없습니다.<br>관리자 모드에서 추가하세요.<br><br>(왼쪽 위 ＋ 버튼을 5초 길게 누르면<br>관리자 모드)';
+    box.appendChild(e); return;
+  }
+  data.posts.forEach(p=> box.appendChild(postCard(p, false)));
+}
+
+function postCard(p, detail){
+  const author = userById(p.userId) || {username:'unknown'};
+  const card = document.createElement('div'); card.className='post';
+  const likeHtml = `<svg class="ico ${p.liked?'liked':''}" viewBox="0 0 24 24" fill="${p.liked?'#ed4956':'none'}" stroke="${p.liked?'#ed4956':'#262626'}" stroke-width="1.8"><path d="M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11z"/></svg>`;
+  const cmtHtml = `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-11.7 7.7L3 21l1.9-5.6A8.4 8.4 0 1 1 21 11.5z"/></svg>`;
+  const shareHtml = `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="1.8"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>`;
+  const saveHtml = `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="1.8"><path d="M6 3h12v18l-6-4-6 4z"/></svg>`;
+  const img = p.image ? `<img class="post-img" src="${p.image}">` : `<div class="post-img" style="display:flex;align-items:center;justify-content:center;color:#adb5bd;font-size:13px">이미지 없음</div>`;
+
+  let commentsBlock = '';
+  if(detail){
+    commentsBlock = (p.comments||[]).map(c=>{
+      const cu = userById(c.userId)||{username:'unknown'};
+      return `<div class="comment">${avatarHTML(cu,34,false)}<div class="cbody"><b>${esc(cu.username)}</b> ${esc(c.text)}<div class="cmeta">좋아요 표시</div></div><div class="clike">♡</div></div>`;
+    }).join('');
+  } else {
+    const n = (p.comments||[]).length;
+    commentsBlock = n>0 ? `<div class="post-comments-link" data-open="${p.id}">댓글 ${n}개 모두 보기</div>` : '';
+  }
+
+  card.innerHTML = `
+    <div class="post-head">
+      ${avatarHTML(author,34,true)}
+      <div class="post-user" data-prof="${author.id}">
+        <span class="uname">${esc(author.username)}</span>
+        ${author.verified?verifiedBadge:''}
+      </div>
+      <span class="post-menu">⋯</span>
+    </div>
+    ${img}
+    <div class="post-actions">${likeHtml}${cmtHtml}${shareHtml}<span class="spacer"></span>${saveHtml}</div>
+    <div class="post-likes">좋아요 ${fmtNum(p.likes)}개</div>
+    ${p.caption?`<div class="post-caption"><b>${esc(author.username)}</b> ${esc(p.caption)}</div>`:''}
+    ${commentsBlock}
+    <div class="post-time">${esc(p.time||'')}</div>`;
+
+  const uEl = card.querySelector('[data-prof]');
+  if(uEl) uEl.onclick = ()=> navProfile(author.id, true);
+  const openEl = card.querySelector('[data-open]');
+  if(openEl) openEl.onclick = ()=> navPost(p.id);
+  if(!detail){ const imgEl = card.querySelector('.post-img'); if(imgEl) imgEl.onclick = ()=> navPost(p.id); }
+  return card;
+}
+
+/* ================= 게시물 상세 ================= */
+function navPost(pid){ showScreen('postScreen', true); const p=data.posts.find(x=>x.id===pid); const box=$('#postScroll'); box.innerHTML=''; if(p) box.appendChild(postCard(p, true)); }
+
+/* ================= 프로필 ================= */
+function navProfile(uid, push){
+  profileUserId = uid;
+  showScreen('profileScreen', push);
+  renderProfile();
+}
+function renderProfile(){
+  const u = userById(profileUserId) || mainUser();
+  const isMain = !!u.isMain;
+  $('#profHeadName').innerHTML = `${esc(u.username)} ${u.verified?verifiedBadge:''}`;
+  $('#profBack').style.display = isMain ? 'none' : 'block';
+  const box = $('#profileScroll'); box.innerHTML='';
+  const myPosts = data.posts.filter(p=>p.userId===u.id);
+
+  const head = document.createElement('div');
+  head.innerHTML = `
+    <div class="prof-top">
+      <div class="prof-av">${u.avatar?`<img src="${u.avatar}">`:defaultAvatar()}</div>
+      <div class="prof-stats">
+        <div><div class="num">${myPosts.length}</div><div class="lbl">게시물</div></div>
+        <div><div class="num">${fmtNum(u.followers)}</div><div class="lbl">팔로워</div></div>
+        <div><div class="num">${fmtNum(u.following)}</div><div class="lbl">팔로우</div></div>
+      </div>
+    </div>
+    <div class="prof-name">${esc(u.name||'')}</div>
+    ${u.bio?`<div class="prof-bio">${esc(u.bio)}</div>`:'<div style="height:8px"></div>'}
+    <div class="prof-btns">
+      ${isMain
+        ? `<button class="btn-gray">프로필 편집</button><button class="btn-gray">보관된 스토리</button>`
+        : `<button class="btn-follow">팔로우</button><button class="btn-gray">메시지</button>`}
+    </div>
+    <div class="grid-tabs">
+      <div><svg viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="1.6"><rect x="3" y="3" width="18" height="18"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg></div>
+      <div class="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v16H4z"/><circle cx="9" cy="9" r="2"/><path d="M4 16l5-4 4 3 3-2 4 3"/></svg></div>
+    </div>`;
+  box.appendChild(head);
+
+  if(!myPosts.length){
+    const e=document.createElement('div'); e.className='empty'; e.textContent='게시물 없음';
+    box.appendChild(e);
+  } else {
+    const grid=document.createElement('div'); grid.className='grid';
+    myPosts.forEach(p=>{
+      const gi=document.createElement('div'); gi.className='grid-item';
+      gi.innerHTML = p.image?`<img src="${p.image}">`:'';
+      gi.onclick = ()=> navPost(p.id);
+      grid.appendChild(gi);
+    });
+    box.appendChild(grid);
+  }
+  const tb=$('#tabbarProfile'); tb.innerHTML=tabbarHTML('profile'); wireTabbar(tb);
+}
+
+/* ================= 스토리 뷰어 ================= */
+let storyIdx = 0;
+function navStory(uid){
+  const list = liveStories();
+  const i = list.findIndex(u=>u.id===uid);
+  if(i<0) return;
+  storyIdx = i;
+  showScreen('storyScreen', true);
+  renderStory();
+}
+function renderStory(){
+  const list = liveStories();
+  const u = list[storyIdx];
+  if(!u){ closeStory(); return; }
+  $('#storyBars').innerHTML = list.map((_,i)=>`<div class="${i===storyIdx?'on':''}"></div>`).join('');
+  $('#storyAv').innerHTML = u.avatar?`<img src="${u.avatar}">`:defaultAvatar();
+  $('#storyName').innerHTML = `${esc(u.username)}${u.verified?verifiedBadge:''}`;
+  $('#storyTime').textContent = u.storyTime||'';
+  const body = $('#storyBody');
+  body.querySelectorAll('img').forEach(n=>n.remove());
+  const im = document.createElement('img'); im.src = u.storyImage;
+  body.insertBefore(im, body.firstChild);
+}
+function stepStory(dir){
+  const list = liveStories();
+  const next = storyIdx + dir;
+  if(next < 0){ closeStory(); return; }        // 첫 스토리에서 이전 → 닫기
+  if(next >= list.length){ closeStory(); return; } // 마지막에서 다음 → 닫기
+  storyIdx = next; renderStory();
+}
+function closeStory(){ history.back(); }
+document.querySelectorAll('[data-snav]').forEach(el=>{
+  el.onclick = ()=> stepStory(el.dataset.snav==='next' ? 1 : -1);
+});
+/* 아래로 스와이프 → 닫기 */
+(function(){
+  const sc = $('#storyScreen'); let y0=null;
+  sc.addEventListener('touchstart', e=>{ y0 = e.touches[0].clientY; }, {passive:true});
+  sc.addEventListener('touchend', e=>{
+    if(y0===null) return;
+    const dy = e.changedTouches[0].clientY - y0; y0=null;
+    if(dy > 70) closeStory();
+  });
+})();
+
+/* ================= DM ================= */
+/* 20250504 → 2025년 5월 4일 / 그 밖의 입력은 적은 그대로 */
+function fmtDate(v){
+  const s=String(v||'').trim(); if(!s) return '';
+  const m=s.match(/^(\d{4})(\d{2})(\d{2})$/);
+  if(!m) return s;
+  return `${Number(m[1])}년 ${Number(m[2])}월 ${Number(m[3])}일`;
+}
+/* 1103 → 오전 11:03,  1430 → 오후 2:30 / 그 밖의 입력은 적은 그대로 */
+function fmtTime(v){
+  const s=String(v||'').trim(); if(!s) return '';
+  const m=s.match(/^(\d{1,2})(\d{2})$/);
+  if(!m) return s;
+  let h=Number(m[1]); const mm=m[2];
+  if(h>23) return s;
+  const ap = h<12 ? '오전' : '오후';
+  h = h%12 || 12;
+  return `${ap} ${h}:${mm}`;
+}
+function stampOf(m){
+  const d=fmtDate(m.date), t=fmtTime(m.time);
+  return [d,t].filter(Boolean).join(' ');
+}
+
+function navDMList(){ showScreen('dmListScreen', true); $('#dmListTitle').textContent = mainUser().username; renderDMList(); }
+function renderDMList(){
+  const box=$('#dmListScroll'); box.innerHTML='';
+  const tb=$('#tabbarDM'); tb.innerHTML=tabbarHTML('dm'); wireTabbar(tb);
+  if(!data.dms.length){ const e=document.createElement('div'); e.className='empty'; e.textContent='대화가 없습니다.'; box.appendChild(e); return; }
+  data.dms.forEach(dm=>{
+    const u=userById(dm.userId)||{username:'unknown'};
+    const last=dm.messages[dm.messages.length-1];
+    const lastText = last ? (last.image?'사진':last.text) : '';
+    /* 활동중·읽음 문구 없이, 마지막 메시지만 */
+    const it=document.createElement('div'); it.className='dm-item';
+    it.innerHTML = `${avatarHTML(u,56,false)}<div class="dm-meta"><div class="dm-name">${esc(u.username)}</div><div class="dm-last">${esc(lastText)}</div></div>`;
+    it.onclick = ()=> navDMThread(dm.id);
+    box.appendChild(it);
+  });
+}
+let curDM=null;
+const dmShareIcon = `<span class="dm-share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg></span>`;
+function navDMThread(dmid){
+  curDM=dmid; showScreen('dmThreadScreen', true);
+  const dm=data.dms.find(d=>d.id===dmid); const u=userById(dm.userId)||{username:'unknown'};
+  $('#dmThreadAv').innerHTML = u.avatar?`<img src="${u.avatar}">`:defaultAvatar();
+  $('#dmThreadName').innerHTML = `${esc(u.username)}${u.verified?verifiedBadge:''}<span class="after">›</span>`;
+  const box=$('#dmThreadScroll'); box.innerHTML='';
+  let prevStamp='';
+  dm.messages.forEach(m=>{
+    const st = stampOf(m);
+    if(st && st !== prevStamp){
+      const s=document.createElement('div'); s.className='dm-stamp'; s.textContent=st;
+      box.appendChild(s); prevStamp=st;
+    }
+    const row=document.createElement('div'); row.className='dm-row'+(m.fromMe?' mine':'');
+    let inner='';
+    if(!m.fromMe) inner += `<div class="dm-av">${u.avatar?`<img src="${u.avatar}">`:defaultAvatar()}</div>`;
+    if(m.image) inner += `<div class="dm-img"><img src="${m.image}"></div>${dmShareIcon}`;
+    else inner += `<div class="dm-bubble">${esc(m.text)}</div>`;
+    row.innerHTML=inner; box.appendChild(row);
+  });
+  box.scrollTop = box.scrollHeight;
+}
+
+/* ================= 뒤로가기 ================= */
+function goBack(){
+  if($('#adminOverlay').classList.contains('active')){ closeAdmin(); return; }
+  const cur = document.querySelector('.screen.active');
+  if(!cur) return;
+  const map = { postScreen:()=>navFeed(), dmThreadScreen:()=>navDMList(), dmListScreen:()=>navFeed(), storyScreen:()=>navFeed() };
+  if(cur.id==='profileScreen'){
+    const u=userById(profileUserId);
+    if(u && u.isMain) navFeed(); else navFeed();
+    return;
+  }
+  if(map[cur.id]) map[cur.id]();
+  else navFeed();
+}
+document.querySelectorAll('[data-back]').forEach(b=> b.onclick = ()=> history.back());
+/* 노트·활동(하트) 아이콘: 반응 없음 */
+window.addEventListener('popstate', function(){
+  if($('#adminOverlay').classList.contains('active')){ closeAdmin(); return; }
+  // 화면 스택 복원: 단순히 홈으로 (스택이 얕음)
+  const cur=document.querySelector('.screen.active');
+  if(cur && cur.id!=='feedScreen'){ goBackNoPush(); }
+});
+function goBackNoPush(){
+  const cur=document.querySelector('.screen.active'); if(!cur) return;
+  if(cur.id==='postScreen'){ showScreen('feedScreen',false); renderFeed(); }
+  else if(cur.id==='profileScreen'){ showScreen('feedScreen',false); renderFeed(); }
+  else if(cur.id==='storyScreen'){ showScreen('feedScreen',false); renderFeed(); }
+  else if(cur.id==='dmThreadScreen'){ showScreen('dmListScreen',false); renderDMList(); }
+  else if(cur.id==='dmListScreen'){ showScreen('feedScreen',false); renderFeed(); }
+  else { showScreen('feedScreen',false); renderFeed(); }
+}
+
+/* =========================================================================
+   관리자 모드
+   ========================================================================= */
+function openAdmin(){ isAdmin=true; $('#modePill').classList.add('show'); $('#adminOverlay').classList.add('active'); renderAdmin(); history.pushState({s:'admin'},''); }
+function closeAdmin(){ $('#adminOverlay').classList.remove('active'); navFeed(); }
+function guestMode(){ isAdmin=false; $('#modePill').classList.remove('show'); toast('손님 모드로 전환되었습니다'); if($('#adminOverlay').classList.contains('active')) history.back(); }
+
+function renderAdmin(){
+  const body=$('#adminBody');
+  body.innerHTML = `
+    <div class="asec" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:13px;font-weight:700;flex:1;min-width:120px">하단 여백 (기기 메뉴바 겹침 보정)</span>
+      <input id="ed-bottomPad" type="number" min="0" max="120" step="2" style="width:80px;border:1px solid #d7dde3;border-radius:8px;padding:7px 9px;font-size:13px" value="${Math.max(0,Number(data.bottomPad)||0)}">
+      <button class="btn btn-dark btn-sm" id="saveBottomPad">저장</button>
+      <div style="width:100%;font-size:12px;color:#8a97a5;line-height:1.5">하단 탭바가 폰 메뉴바에 가려지면 숫자(px)를 키우세요. 보통 24~48.</div>
+    </div>
+    <div class="asec" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:13px;font-weight:700;flex:1;min-width:110px">상단 로고 이미지</span>
+      <div class="thumb-pick" id="pickLogo" style="width:120px;height:44px;background:#fff;border:1px solid #e3e7ec">${data.logo?`<img src="${data.logo}" style="object-fit:contain">`:'로고 선택'}</div>
+      ${data.logo?`<button class="btn btn-ghost btn-sm" id="clearLogo">기본값</button>`:''}
+      <div style="width:100%;font-size:12px;color:#8a97a5;line-height:1.5">PNG 로고를 올리면 상단 가운데 로고가 교체됩니다. 바깥 여백은 자동으로 잘립니다.<br>비워두면 앱 폴더의 <b>logo.png</b> 를, 그것도 없으면 기본 필기체 로고를 씁니다.</div>
+    </div>
+    <div class="asec">
+      <h3>백업 / 복원 <span style="font-size:11px;color:#8a97a5;font-weight:400">저장 용량 약 ${storageKB()}KB</span></h3>
+      <div class="hint" style="margin-top:0;margin-bottom:10px">지금 내용(게시물·사용자·DM·스토리·로고)을 파일 하나로 내보내고 다시 불러올 수 있습니다. 새 파일을 설치해 내용이 초기화된 뒤에도 이 파일로 되살릴 수 있습니다.</div>
+      <button class="btn btn-ghost btn-block" id="exportBtn">내보내기 (파일 저장)</button>
+      <button class="btn btn-ghost btn-block" id="importBtn">불러오기 (파일 열기)</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+      <button class="btn btn-dark btn-block" id="exportHtmlBtn">새 index.html 만들기</button>
+      <div class="hint">지금 내용을 그대로 담은 배포용 index.html 을 만듭니다. 이 파일로 폴더의 index.html 을 바꾸면, 다른 폰에 설치할 때도 이 내용이 그대로 들어갑니다.<br>현재 파일 버전 : ${esc(DATA_VERSION)}${hasLocalEdits()?' · <b style="color:#d63a2f">이 기기에서 수정한 내용 있음</b>':' · 파일 내용과 같음'}</div>
+    </div>
+    <div class="admin-tabs">
+      <button data-at="posts" class="${adminTab==='posts'?'on':''}">게시물</button>
+      <button data-at="users" class="${adminTab==='users'?'on':''}">사용자</button>
+      <button data-at="dms" class="${adminTab==='dms'?'on':''}">DM</button>
+      <button data-at="stories" class="${adminTab==='stories'?'on':''}">스토리</button>
+    </div>
+    <div id="adminSec"></div>`;
+  body.querySelectorAll('[data-at]').forEach(b=> b.onclick=()=>{ adminTab=b.dataset.at; renderAdmin(); });
+  $('#saveBottomPad').onclick = ()=>{ data.bottomPad = Math.max(0, Number($('#ed-bottomPad').value)||0); save(); applyBottomPad(); toast('하단 여백 저장됨'); };
+  $('#pickLogo').onclick = ()=> pickLogoImage(url=>{ data.logo=url; save(); applyLogo(); renderAdmin(); });
+  $('#exportBtn').onclick = exportData;
+  $('#importBtn').onclick = ()=> $('#importFile').click();
+  $('#importFile').onchange = importData;
+  $('#exportHtmlBtn').onclick = exportHtml;
+  const cl=$('#clearLogo'); if(cl) cl.onclick=()=>{ data.logo=''; save(); applyLogo(); renderAdmin(); };
+  if(adminTab==='posts') renderAdminPosts();
+  else if(adminTab==='users') renderAdminMe();
+  else if(adminTab==='stories') renderAdminStories();
+  else renderAdminDMs();
+}
+
+/* ----- 계정 공통 입력 폼 ----- */
+function accountFieldsHTML(u){
+  return `
+    <div class="field" style="display:flex;gap:12px;align-items:center">
+      <div class="thumb-pick circle" data-af="av">${u.avatar?`<img src="${u.avatar}">`:'사진'}</div>
+      <div style="flex:1">
+        <label>아이디 (@username)</label>
+        <input data-af="username" value="${esc(u.username)}">
+      </div>
+    </div>
+    <div class="field"><label>이름</label><input data-af="name" value="${esc(u.name||'')}"></div>
+    <div class="field"><label>소개(bio)</label><textarea data-af="bio">${esc(u.bio||'')}</textarea></div>
+    <div class="frow">
+      <div class="field"><label>팔로워</label><input data-af="followers" type="number" value="${Number(u.followers)||0}"></div>
+      <div class="field"><label>팔로우</label><input data-af="following" type="number" value="${Number(u.following)||0}"></div>
+    </div>
+    <div class="field"><label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" data-af="verified" ${u.verified?'checked':''} style="width:auto"> 인증 배지(파란 체크)</label></div>`;
+}
+function wireAccountFields(u, redraw){
+  const sec=$('#adminSec'); const q=n=> sec.querySelector(`[data-af="${n}"]`);
+  q('av').onclick=()=> pickImage(200, url=>{ u.avatar=url; save(); redraw(); });
+  q('username').oninput=e=>{ u.username=e.target.value; save(); };
+  q('name').oninput=e=>{ u.name=e.target.value; save(); };
+  q('bio').oninput=e=>{ u.bio=e.target.value; save(); };
+  q('followers').oninput=e=>{ u.followers=Number(e.target.value)||0; save(); };
+  q('following').oninput=e=>{ u.following=Number(e.target.value)||0; save(); };
+  q('verified').onchange=e=>{ u.verified=e.target.checked; save(); };
+}
+
+/* ----- 사용자 탭: 내 계정만 (목록 없음) ----- */
+function renderAdminMe(){
+  const u=mainUser(); const sec=$('#adminSec');
+  sec.innerHTML = `
+    <div class="asec">
+      <h3>내 계정</h3>
+      ${accountFieldsHTML(u)}
+      <div class="hint">앱 주인 계정입니다. 프로필 탭과 DM에서 “나”로 표시됩니다.<br>다른 인물은 “스토리” 탭에서 관리하세요.</div>
+    </div>`;
+  wireAccountFields(u, ()=> renderAdminMe());
+}
+
+/* ----- 스토리 탭: 내 계정을 제외한 인물 목록 ----- */
+function renderAdminStories(){
+  const sec=$('#adminSec'); const list=storyUsers();
+  let html = `<div class="asec"><h3>스토리 <button class="btn btn-dark btn-sm" id="addStory">＋ 추가</button></h3>`;
+  if(!list.length) html += `<div class="hint">등록된 인물이 없습니다. ＋ 추가로 만드세요.</div>`;
+  list.forEach((u,idx)=>{
+    html += `<div class="alist-item">
+      <div class="top">
+        <div style="display:flex;gap:10px;align-items:center">
+          <div class="thumb-pick" data-simg="${u.id}">${u.storyImage?`<img src="${u.storyImage}">`:'사진'}</div>
+          <div><div class="nm">@${esc(u.username)}${u.verified?' ✔':''}</div>
+          <div class="sub">${u.storyImage?`스토리 있음 · ${esc(u.storyTime||'시간 미입력')}`:'스토리 없음 · 회색 링'}</div></div>
+        </div>
+        <button class="btn btn-ghost btn-sm" data-estory="${u.id}">편집</button>
+      </div>
+      <div class="row-actions" style="margin-top:8px">
+        <button class="btn btn-ghost btn-sm" data-sup="${u.id}" ${idx===0?'disabled':''}>▲</button>
+        <button class="btn btn-ghost btn-sm" data-sdn="${u.id}" ${idx===list.length-1?'disabled':''}>▼</button>
+      </div></div>`;
+  });
+  html += `<div class="hint">목록 순서 그대로 손님 모드 상단 스토리에 배치됩니다.<br>스토리 사진이 없으면 회색 링으로만 보이고 눌러도 열리지 않습니다.</div></div>`;
+  sec.innerHTML=html;
+  $('#addStory').onclick=()=>{ const u={id:id(),username:'new_user',name:'',avatar:'',bio:'',followers:0,following:0,verified:false,isMain:false,storyImage:'',storyTime:''}; data.users.push(u); save(); editStory(u.id); };
+  sec.querySelectorAll('[data-estory]').forEach(b=> b.onclick=()=> editStory(b.dataset.estory));
+  sec.querySelectorAll('[data-simg]').forEach(b=> b.onclick=()=> pickImage(900, url=>{ const u=userById(b.dataset.simg); u.storyImage=url; save(); renderAdminStories(); }));
+  sec.querySelectorAll('[data-sup]').forEach(b=> b.onclick=()=> moveStory(b.dataset.sup,-1));
+  sec.querySelectorAll('[data-sdn]').forEach(b=> b.onclick=()=> moveStory(b.dataset.sdn,1));
+}
+function moveStory(uid,dir){
+  const list=storyUsers(); const i=list.findIndex(u=>u.id===uid); const j=i+dir;
+  if(i<0 || j<0 || j>=list.length) return;
+  const a=data.users.indexOf(list[i]), b=data.users.indexOf(list[j]);
+  [data.users[a],data.users[b]]=[data.users[b],data.users[a]];
+  save(); renderAdminStories();
+}
+function editStory(uid){
+  const u=userById(uid); if(!u){ renderAdminStories(); return; }
+  const sec=$('#adminSec');
+  sec.innerHTML = `
+    <button class="btn btn-ghost btn-sm" id="backStories" style="margin-bottom:12px">‹ 목록으로</button>
+    <div class="asec">
+      <h3>스토리</h3>
+      <div class="field" style="display:flex;gap:12px;align-items:flex-start">
+        <div class="thumb-pick" id="s-img">${u.storyImage?`<img src="${u.storyImage}">`:'사진'}</div>
+        <div style="flex:1"><label>시간 표시</label><input id="s-time" value="${esc(u.storyTime||'')}" placeholder="13시간"></div>
+      </div>
+      <button class="btn btn-ghost btn-block" id="s-del">스토리만 삭제 (사진·시간)</button>
+      <div class="hint">계정은 남고 스토리만 사라집니다. 게시물·댓글·DM은 그대로 유지됩니다.</div>
+    </div>
+    <div class="asec">
+      <h3>계정 정보</h3>
+      ${accountFieldsHTML(u)}
+    </div>
+    <div class="asec"><button class="btn btn-danger btn-block" id="u-del">이 계정 삭제</button></div>`;
+  $('#backStories').onclick=()=>{ save(); renderAdminStories(); };
+  wireAccountFields(u, ()=> editStory(uid));
+  $('#s-img').onclick=()=> pickImage(900, url=>{ u.storyImage=url; save(); editStory(uid); });
+  $('#s-time').oninput=e=>{ u.storyTime=e.target.value; save(); };
+  $('#s-del').onclick=()=> confirmDialog(`@${u.username} 의 스토리만 삭제할까요? (계정은 남습니다)`, ()=>{
+    u.storyImage=''; u.storyTime=''; save(); editStory(uid);
+  });
+  $('#u-del').onclick=()=> confirmDialog(`@${u.username} 계정을 삭제할까요?\n이 사람의 게시물·댓글·DM도 함께 사라집니다.`, ()=>{
+    data.posts = data.posts.filter(p=>p.userId!==uid);
+    data.posts.forEach(p=> p.comments=(p.comments||[]).filter(c=>c.userId!==uid));
+    data.dms = data.dms.filter(d=>d.userId!==uid);
+    data.users = data.users.filter(x=>x.id!==uid);
+    save(); renderAdminStories();
+  });
+}
+
+/* ----- 게시물 관리 ----- */
+function renderAdminPosts(){
+  const sec=$('#adminSec');
+  if(!data.users.length){ sec.innerHTML=`<div class="asec"><div class="hint">먼저 “사용자” 탭에서 사용자를 추가하세요.</div></div>`; return; }
+  let html = `<div class="asec"><h3>게시물 <button class="btn btn-dark btn-sm" id="addPost">＋ 추가</button></h3>`;
+  if(!data.posts.length) html += `<div class="hint">게시물이 없습니다.</div>`;
+  data.posts.forEach((p,idx)=>{
+    const au=userById(p.userId)||{username:'?'};
+    html += `<div class="alist-item">
+      <div class="top">
+        <div style="display:flex;gap:10px;align-items:center">
+          <div class="thumb-pick" data-pimg="${p.id}">${p.image?`<img src="${p.image}">`:'사진'}</div>
+          <div><div class="nm">@${esc(au.username)}</div><div class="sub">좋아요 ${fmtNum(p.likes)} · 댓글 ${(p.comments||[]).length}</div></div>
+        </div>
+        <div class="row-actions"><button class="btn btn-ghost btn-sm" data-epost="${p.id}">편집</button></div>
+      </div>
+      <div class="row-actions" style="margin-top:8px">
+        <button class="btn btn-ghost btn-sm" data-pup="${p.id}" ${idx===0?'disabled':''}>▲</button>
+        <button class="btn btn-ghost btn-sm" data-pdn="${p.id}" ${idx===data.posts.length-1?'disabled':''}>▼</button>
+      </div></div>`;
+  });
+  html += `</div>`;
+  sec.innerHTML=html;
+  $('#addPost').onclick=()=>{ const p={id:id(),userId:mainUser().id,image:'',caption:'',likes:0,liked:false,time:'방금 전',comments:[]}; data.posts.unshift(p); save(); editPost(p.id); };
+  sec.querySelectorAll('[data-epost]').forEach(b=> b.onclick=()=> editPost(b.dataset.epost));
+  sec.querySelectorAll('[data-pimg]').forEach(b=> b.onclick=()=> pickImage(760, url=>{ const p=data.posts.find(x=>x.id===b.dataset.pimg); p.image=url; save(); renderAdminPosts(); }));
+  sec.querySelectorAll('[data-pup]').forEach(b=> b.onclick=()=> movePost(b.dataset.pup,-1));
+  sec.querySelectorAll('[data-pdn]').forEach(b=> b.onclick=()=> movePost(b.dataset.pdn,1));
+}
+function movePost(pid,dir){ const i=data.posts.findIndex(p=>p.id===pid); const j=i+dir; if(j<0||j>=data.posts.length) return; [data.posts[i],data.posts[j]]=[data.posts[j],data.posts[i]]; save(); renderAdminPosts(); }
+function editPost(pid){
+  const p=data.posts.find(x=>x.id===pid); const sec=$('#adminSec');
+  const opts = data.users.map(u=>`<option value="${u.id}" ${u.id===p.userId?'selected':''}>@${esc(u.username)}</option>`).join('');
+  sec.innerHTML = `
+    <button class="btn btn-ghost btn-sm" id="backPosts" style="margin-bottom:12px">‹ 목록으로</button>
+    <div class="asec">
+      <h3>게시물 편집</h3>
+      <div class="field" style="display:flex;gap:12px;align-items:flex-start">
+        <div class="thumb-pick" id="pimg">${p.image?`<img src="${p.image}">`:'사진'}</div>
+        <div style="flex:1">
+          <label>작성자</label>
+          <select id="p-user">${opts}</select>
+        </div>
+      </div>
+      <div class="field"><label>내용(캡션)</label><textarea id="p-caption">${esc(p.caption||'')}</textarea></div>
+      <div class="frow">
+        <div class="field"><label>좋아요 수</label><input id="p-likes" type="number" value="${Number(p.likes)||0}"></div>
+        <div class="field"><label>시간 표시</label><input id="p-time" value="${esc(p.time||'')}" placeholder="3시간 전"></div>
+      </div>
+      <div class="field"><label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="p-liked" ${p.liked?'checked':''} style="width:auto"> 좋아요 눌린 상태(빨간 하트)</label></div>
+    </div>
+    <div class="asec">
+      <h3>댓글 <button class="btn btn-dark btn-sm" id="addCmt">＋ 추가</button></h3>
+      <div id="cmtList"></div>
+    </div>
+    <div class="asec"><button class="btn btn-danger btn-block" id="p-del">이 게시물 삭제</button></div>`;
+  $('#backPosts').onclick=()=>{ save(); renderAdminPosts(); };
+  $('#pimg').onclick=()=> pickImage(760, url=>{ p.image=url; save(); editPost(pid); });
+  $('#p-user').onchange=e=>{ p.userId=e.target.value; save(); };
+  $('#p-caption').oninput=e=>{ p.caption=e.target.value; save(); };
+  $('#p-likes').oninput=e=>{ p.likes=Number(e.target.value)||0; save(); };
+  $('#p-time').oninput=e=>{ p.time=e.target.value; save(); };
+  $('#p-liked').onchange=e=>{ p.liked=e.target.checked; save(); };
+  $('#addCmt').onclick=()=>{ p.comments=p.comments||[]; p.comments.push({id:id(),userId:(data.users[0]||{}).id,text:''}); save(); editPost(pid); };
+  $('#p-del').onclick=()=> confirmDialog('이 게시물을 삭제할까요?', ()=>{ data.posts=data.posts.filter(x=>x.id!==pid); save(); renderAdminPosts(); });
+  renderCmtEditors(p, pid);
+}
+function renderCmtEditors(p, pid){
+  const box=$('#cmtList'); box.innerHTML='';
+  if(!(p.comments||[]).length){ box.innerHTML=`<div class="hint">댓글이 없습니다.</div>`; return; }
+  const opts = data.users.map(u=>u.id);
+  p.comments.forEach((c,i)=>{
+    const ed=document.createElement('div'); ed.className='sub-item';
+    ed.innerHTML = `
+      <div class="frow" style="margin-bottom:6px">
+        <select data-cf="user">${data.users.map(u=>`<option value="${u.id}" ${u.id===c.userId?'selected':''}>@${esc(u.username)}</option>`).join('')}</select>
+        <button class="btn btn-danger btn-sm" data-cdel="${i}" style="flex:0 0 auto">삭제</button>
+      </div>
+      <textarea data-cf="text" placeholder="댓글 내용">${esc(c.text||'')}</textarea>`;
+    ed.querySelector('[data-cf="user"]').onchange=e=>{ c.userId=e.target.value; save(); };
+    ed.querySelector('[data-cf="text"]').oninput=e=>{ c.text=e.target.value; save(); };
+    ed.querySelector('[data-cdel]').onclick=()=>{ p.comments.splice(i,1); save(); renderCmtEditors(p,pid); };
+    box.appendChild(ed);
+  });
+}
+
+/* ----- DM 관리 ----- */
+function renderAdminDMs(){
+  const sec=$('#adminSec');
+  if(!data.users.length){ sec.innerHTML=`<div class="asec"><div class="hint">먼저 “사용자” 탭에서 사용자를 추가하세요.</div></div>`; return; }
+  let html=`<div class="asec"><h3>DM 대화 <button class="btn btn-dark btn-sm" id="addDM">＋ 추가</button></h3>`;
+  if(!data.dms.length) html+=`<div class="hint">대화가 없습니다.</div>`;
+  data.dms.forEach(dm=>{
+    const u=userById(dm.userId)||{username:'?'};
+    html += `<div class="alist-item"><div class="top">
+      <div class="nm">@${esc(u.username)}</div>
+      <button class="btn btn-ghost btn-sm" data-edm="${dm.id}">편집</button>
+    </div><div class="sub">메시지 ${dm.messages.length}개</div></div>`;
+  });
+  html+=`</div>`;
+  sec.innerHTML=html;
+  $('#addDM').onclick=()=>{ const dm={id:id(),userId:(data.users.find(u=>!u.isMain)||data.users[0]).id,messages:[]}; data.dms.push(dm); save(); editDM(dm.id); };
+  sec.querySelectorAll('[data-edm]').forEach(b=> b.onclick=()=> editDM(b.dataset.edm));
+}
+function editDM(dmid){
+  const dm=data.dms.find(d=>d.id===dmid); const sec=$('#adminSec');
+  const opts=data.users.map(u=>`<option value="${u.id}" ${u.id===dm.userId?'selected':''}>@${esc(u.username)}</option>`).join('');
+  sec.innerHTML = `
+    <button class="btn btn-ghost btn-sm" id="backDMs" style="margin-bottom:12px">‹ 목록으로</button>
+    <div class="asec">
+      <h3>대화 상대</h3>
+      <div class="field"><select id="dm-user">${opts}</select></div>
+      <div class="hint">“나”가 보낸 메시지는 오른쪽(보라 그라데이션), 상대는 왼쪽에 표시됩니다.</div>
+    </div>
+    <div class="asec">
+      <h3>메시지 <button class="btn btn-dark btn-sm" id="addMsg">＋ 추가</button></h3>
+      <div class="hint" style="margin-top:0;margin-bottom:10px">날짜는 <b>20250504</b> → 2025년 5월 4일, 시간은 <b>1103</b> → 오전 11:03 으로 바뀝니다.<br>(그대로 적고 싶으면 “7월 18일”, “오후 9:32” 처럼 적으면 됩니다)</div>
+      <div id="dmMsgList"></div>
+    </div>
+    <div class="asec"><button class="btn btn-danger btn-block" id="dm-del">이 대화 삭제</button></div>`;
+  $('#backDMs').onclick=()=>{ save(); renderAdminDMs(); };
+  $('#dm-user').onchange=e=>{ dm.userId=e.target.value; save(); };
+  $('#addMsg').onclick=()=>{ dm.messages.push({id:id(),fromMe:false,text:'',image:'',date:'',time:''}); save(); editDM(dmid); };
+  $('#dm-del').onclick=()=> confirmDialog('이 대화를 삭제할까요?', ()=>{ data.dms=data.dms.filter(d=>d.id!==dmid); save(); renderAdminDMs(); });
+  renderDMMsgEditors(dm, dmid);
+}
+function renderDMMsgEditors(dm, dmid){
+  const box=$('#dmMsgList'); box.innerHTML='';
+  if(!dm.messages.length){ box.innerHTML=`<div class="hint">메시지가 없습니다.</div>`; return; }
+  dm.messages.forEach((m,i)=>{
+    const ed=document.createElement('div'); ed.className='sub-item';
+    ed.innerHTML = `
+      <div class="frow" style="margin-bottom:6px;align-items:center">
+        <select data-mf="from"><option value="0" ${!m.fromMe?'selected':''}>상대방</option><option value="1" ${m.fromMe?'selected':''}>나</option></select>
+        <input data-mf="date" placeholder="20250504" value="${esc(m.date||'')}">
+        <input data-mf="time" placeholder="1103" value="${esc(m.time||'')}">
+      </div>
+      <div style="font-size:11.5px;color:#98a5b2;margin:-2px 0 6px">표시 : <span data-prev>${esc(stampOf(m))||'<span style="color:#c3ccd4">날짜·시간 없음</span>'}</span></div>
+      <textarea data-mf="text" placeholder="메시지 (사진만 보내려면 비워두기)">${esc(m.text||'')}</textarea>
+      <div class="frow" style="margin-top:6px;align-items:center">
+        <div class="thumb-pick" data-mimg="${i}" style="width:44px;height:44px">${m.image?`<img src="${m.image}">`:'사진'}</div>
+        ${m.image?`<button class="btn btn-ghost btn-sm" data-mimgdel="${i}" style="flex:0 0 auto">사진 제거</button>`:'<span style="flex:1"></span>'}
+        <button class="btn btn-ghost btn-sm" data-mup="${i}" ${i===0?'disabled':''} style="flex:0 0 auto">▲</button>
+        <button class="btn btn-ghost btn-sm" data-mdn="${i}" ${i===dm.messages.length-1?'disabled':''} style="flex:0 0 auto">▼</button>
+        <button class="btn btn-danger btn-sm" data-mdel="${i}" style="flex:0 0 auto">삭제</button>
+      </div>`;
+    ed.querySelector('[data-mf="from"]').onchange=e=>{ m.fromMe = e.target.value==='1'; save(); };
+    const prev = ed.querySelector('[data-prev]');
+    const refreshPrev = ()=>{ prev.innerHTML = esc(stampOf(m)) || '<span style="color:#c3ccd4">날짜·시간 없음</span>'; };
+    ed.querySelector('[data-mf="date"]').oninput=e=>{ m.date=e.target.value; save(); refreshPrev(); };
+    ed.querySelector('[data-mf="time"]').oninput=e=>{ m.time=e.target.value; save(); refreshPrev(); };
+    ed.querySelector('[data-mf="text"]').oninput=e=>{ m.text=e.target.value; save(); };
+    ed.querySelector('[data-mimg]').onclick=()=> pickImage(680, url=>{ m.image=url; save(); renderDMMsgEditors(dm,dmid); });
+    const del=ed.querySelector('[data-mimgdel]'); if(del) del.onclick=()=>{ m.image=''; save(); renderDMMsgEditors(dm,dmid); };
+    ed.querySelector('[data-mdel]').onclick=()=>{ dm.messages.splice(i,1); save(); renderDMMsgEditors(dm,dmid); };
+    ed.querySelector('[data-mup]').onclick=()=>{ if(i>0){ [dm.messages[i-1],dm.messages[i]]=[dm.messages[i],dm.messages[i-1]]; save(); renderDMMsgEditors(dm,dmid);} };
+    ed.querySelector('[data-mdn]').onclick=()=>{ if(i<dm.messages.length-1){ [dm.messages[i+1],dm.messages[i]]=[dm.messages[i],dm.messages[i+1]]; save(); renderDMMsgEditors(dm,dmid);} };
+    box.appendChild(ed);
+  });
+}
+
+/* ---------- 이미지 업로드(축소) ---------- */
+function pickImage(size, cb, keepPng){
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
+  inp.onchange=e=>{ const f=e.target.files[0]; if(!f) return;
+    const reader=new FileReader();
+    reader.onload=()=>{ const img=new Image(); img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      let w=img.width,h=img.height;
+      if(w>h){ if(w>size){ h=h*size/w; w=size; } } else { if(h>size){ w=w*size/h; h=size; } }
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      cb(keepPng ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg',0.82));
+    }; img.src=reader.result; };
+    reader.readAsDataURL(f);
+  };
+  inp.click();
+}
+
+/* ---------- 로고 업로드(바깥 여백 자동 잘라내기) ---------- */
+function pickLogoImage(cb){
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
+  inp.onchange=e=>{ const f=e.target.files[0]; if(!f) return;
+    const reader=new FileReader();
+    reader.onload=()=> trimLogo(reader.result, cb);
+    reader.readAsDataURL(f);
+  };
+  inp.click();
+}
+function trimLogo(dataUrl, cb){
+  const img=new Image();
+  img.onload=()=>{
+      const W=img.width, H=img.height;
+      const src=document.createElement('canvas'); src.width=W; src.height=H;
+      src.getContext('2d').drawImage(img,0,0);
+      let x0=0,y0=0,x1=W-1,y1=H-1;
+      try{
+        const d=src.getContext('2d').getImageData(0,0,W,H).data;
+        const ink=(x,y)=>{ const i=(y*W+x)*4;
+          if(d[i+3]<20) return false;                       // 투명
+          return !(d[i]>235 && d[i+1]>235 && d[i+2]>235); }; // 흰 배경
+        const rowHas=y=>{ for(let x=0;x<W;x++) if(ink(x,y)) return true; return false; };
+        const colHas=x=>{ for(let y=0;y<H;y++) if(ink(x,y)) return true; return false; };
+        while(y0<H-1 && !rowHas(y0)) y0++;
+        while(y1>y0   && !rowHas(y1)) y1--;
+        while(x0<W-1 && !colHas(x0)) x0++;
+        while(x1>x0   && !colHas(x1)) x1--;
+      }catch(err){ x0=0; y0=0; x1=W-1; y1=H-1; }
+      let cw=Math.max(1,x1-x0+1), ch=Math.max(1,y1-y0+1);
+      const target=120;                                      // 고해상도 대비 높이
+      const sc=Math.min(1, target/ch), ow=Math.round(cw*sc), oh=Math.round(ch*sc);
+      const out=document.createElement('canvas'); out.width=ow; out.height=oh;
+      out.getContext('2d').drawImage(src, x0,y0,cw,ch, 0,0,ow,oh);
+      cb(out.toDataURL('image/png'));
+  };
+  img.src=dataUrl;
+}
+
+/* =========================================================================
+   백업 / 복원 / 배포용 파일 만들기
+   ========================================================================= */
+function downloadFile(name, text, mime){
+  const blob = new Blob([text], {type: mime || 'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+}
+function newVersion(){
+  const d = new Date(), p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+}
+
+/* ----- JSON 백업 ----- */
+function exportData(){
+  const payload = { app:'단서인스타', version:DATA_VERSION, exportedAt:new Date().toISOString(), data:data };
+  downloadFile('단서인스타_백업.json', JSON.stringify(payload,null,2), 'application/json');
+  toast('백업 파일을 저장했습니다');
+}
+function importData(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const parsed = JSON.parse(reader.result);
+      const body = (parsed && parsed.data) ? parsed.data : parsed;
+      if(!body || !Array.isArray(body.users)) throw new Error('bad');
+      data = normalize(body);
+      if(!baseFp) baseFp = fingerprint(normalize(deepCopy(EMBEDDED_DATA)));
+      save();                 /* 현재 파일 버전으로 도장을 다시 찍어 저장 */
+      applyLogo(); applyBottomPad();
+      toast('불러왔습니다');
+      renderAdmin();
+    }catch(err){ toast('올바른 백업 파일이 아닙니다'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+/* ----- 지금 내용을 담은 배포용 index.html 만들기 ----- */
+const MARK_S = '/*__CS' + '_DATA_START__';
+const MARK_E = '/*__CS' + '_DATA_END__*/';
+
+/* 서버 없이(파일을 직접 열었을 때도) 자기 자신의 소스를 만들어 낸다.
+   화면에 그려둔 내용은 열 때마다 다시 그리므로 비워서 내보낸다. */
+function selfHtml(){
+  const root = document.documentElement.cloneNode(true);
+  ['#feedScroll','#postScroll','#profileScroll','#dmListScroll','#dmThreadScroll',
+   '#tabbarFeed','#tabbarProfile','#tabbarDM','#adminBody','#storyBars','#storyAv',
+   '#storyName','#dmThreadAv','#dmThreadName','#profHeadName'].forEach(sel=>{
+    const el = root.querySelector(sel); if(el) el.innerHTML = '';
+  });
+  const st = root.querySelector('#storyTime'); if(st) st.textContent = '';
+  const lg = root.querySelector('#feedLogo'); if(lg) lg.innerHTML = '<span class="logo-text">Instagram</span>';
+  root.querySelectorAll('#storyBody img').forEach(n=> n.remove());
+  root.querySelectorAll('.screen').forEach(s=> s.classList.remove('active'));
+  const feed = root.querySelector('#feedScreen'); if(feed) feed.classList.add('active');
+  const ov = root.querySelector('#adminOverlay'); if(ov) ov.classList.remove('active');
+  const mp = root.querySelector('#modePill'); if(mp) mp.classList.remove('show');
+  const cb = root.querySelector('#confirmBox'); if(cb) cb.classList.remove('show');
+  const ts = root.querySelector('#toast'); if(ts){ ts.classList.remove('show'); ts.textContent=''; }
+  const ph = root.querySelector('#phone'); if(ph) ph.style.removeProperty('--safe-b');
+  return '<!DOCTYPE html>\n' + root.outerHTML + '\n';
+}
+function buildHtmlFrom(tpl){
+  const i = tpl.indexOf(MARK_S), j = tpl.indexOf(MARK_E);
+  if(i < 0 || j <= i) return null;
+  const ver = newVersion();
+  const json = JSON.stringify(data, null, 1).replace(/<\//g, '<\\/');
+  const block = MARK_S + ' 아래 두 줄이 이 파일에 들어있는 내용입니다. */\n'
+    + 'const DATA_VERSION = ' + JSON.stringify(ver) + ';\n'
+    + 'const EMBEDDED_DATA = ' + json + ';\n';
+  return { html: tpl.slice(0,i) + block + tpl.slice(j), version: ver };
+}
+function finishExportHtml(built){
+  if(!built){ toast('파일을 만들 수 없습니다'); return; }
+  downloadFile('index.html', built.html, 'text/html;charset=utf-8');
+  baseFp = fingerprint(data);
+  save();
+  toast('새 index.html 저장됨 · 버전 ' + built.version);
+  if($('#adminOverlay').classList.contains('active')) renderAdmin();
+}
+function exportHtml(){
+  if(location.protocol.indexOf('http') !== 0){
+    /* 파일로 직접 열었을 때는 “지금 열려 있는 화면의 코드”가 그대로 저장된다.
+       기능이 추가된 파일을 새로 받은 뒤 새로고침 없이 내보내면 예전 코드로 되돌아가므로 한 번 확인한다. */
+    confirmDialog('지금 화면에 열려 있는 상태로 파일을 만듭니다.\n기능이 바뀐 파일을 새로 받았다면 먼저 새로고침 후에 만들어 주세요.',
+      ()=> finishExportHtml(buildHtmlFrom(selfHtml())));
+    return;
+  }
+  fetch('./index.html?_ex=' + Date.now(), {cache:'no-store'})
+    .then(r=> r.ok ? r.text() : Promise.reject())
+    .then(tpl=> finishExportHtml(buildHtmlFrom(tpl)))
+    .catch(()=> finishExportHtml(buildHtmlFrom(selfHtml())));
+}
+
+/* ---------- 전체화면 ---------- */
+function toggleFullscreen(){ const el=document.documentElement; if(!document.fullscreenElement){ (el.requestFullscreen||el.webkitRequestFullscreen||function(){}).call(el);} else { (document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document);} }
+
+/* ---------- ＋ 버튼 ----------
+   손님 모드 : 5초 길게 누르기 → 관리자 모드로 전환 + 관리자 화면
+   관리자 모드 : 짧게 누르면 바로 관리자 화면                      */
+let pressTimer=null, pressFired=false;
+const plusBtn=$('#btnPlus');
+function startPress(){
+  if(isAdmin) return;                       // 관리자 모드에서는 롱프레스 불필요
+  pressFired=false; clearTimeout(pressTimer);
+  pressTimer=setTimeout(()=>{ pressFired=true; openAdmin(); }, 5000);
+}
+function cancelPress(){ clearTimeout(pressTimer); }
+plusBtn.addEventListener('mousedown',startPress); plusBtn.addEventListener('touchstart',startPress,{passive:true});
+['mouseup','mouseleave','touchend','touchcancel'].forEach(ev=> plusBtn.addEventListener(ev,cancelPress));
+plusBtn.addEventListener('click', ()=>{
+  if(pressFired){ pressFired=false; return; }   // 롱프레스로 이미 열린 경우
+  if(isAdmin) openAdmin();                      // 관리자 모드: 클릭으로 진입
+  // 손님 모드 짧은 클릭: 반응 없음
+});
+plusBtn.addEventListener('contextmenu', e=> e.preventDefault());
+
+$('#adminClose').onclick=()=> history.back();
+$('#adminGuest').onclick=guestMode;
+
+/* ---------- 초기화 / 설치(PWA) ----------
+   주소 끝에 ?reset=1 을 붙여 열면 저장된 내용과 캐시를 전부 지우고 처음 상태로 시작합니다.
+   같은 주소(github.io 등)에 다른 단서 앱이 함께 올라가 있을 수 있으므로
+   이 앱의 캐시·서비스워커만 골라서 지웁니다. */
+const CACHE_PREFIX = 'crimescene-insta-';
+function appDir(){ try{ return new URL('./', location.href).href; }catch(e){ return location.href; } }
+if(/[?&]reset=1/.test(location.search)){
+  try{ localStorage.removeItem(STORE); }catch(e){}
+  try{
+    if(window.caches && caches.keys)
+      caches.keys().then(ks=> ks.forEach(k=>{ if(k.indexOf(CACHE_PREFIX)===0) caches.delete(k); }));
+  }catch(e){}
+  try{
+    if(navigator.serviceWorker && navigator.serviceWorker.getRegistrations){
+      const dir = appDir();
+      navigator.serviceWorker.getRegistrations().then(rs=> rs.forEach(r=>{
+        if(String(r.scope).indexOf(dir)===0) r.unregister();
+      }));
+    }
+  }catch(e){}
+}
+
+/* 초기 렌더 */
+data = load();
+applyLogo();
+renderFeed();
+
+/* 서비스워커: 최신 파일 우선 + 예전 캐시 자동 삭제 (http/https 로 열었을 때만) */
+if(('serviceWorker' in navigator) && location.protocol.indexOf('http')===0){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js?v=' + encodeURIComponent(DATA_VERSION), {updateViaCache:'none'})
+      .catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
