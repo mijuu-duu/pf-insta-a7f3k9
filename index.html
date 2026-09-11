@@ -903,6 +903,13 @@ function guestMode(){ isAdmin=false; $('#modePill').classList.remove('show'); to
 function renderAdmin(){
   const body=$('#adminBody');
   body.innerHTML = `
+    ${hasLocalEdits() ? `<div class="asec" style="background:#fff8d6;border:1px solid #f0dd8a">
+      <h3 style="color:#7a5b00">이 기기에만 저장된 수정이 있습니다</h3>
+      <div class="hint" style="margin-top:0;color:#7a5b00">지금 보이는 내용은 <b>이 기기에만</b> 저장되어 있고,
+        index.html 파일에는 아직 들어가지 않았습니다. 이 상태로 파일을 다른 폰에 옮기면 <b>예전 내용</b>이 나옵니다.<br>
+        아래 <b>“새 index.html 만들기”</b>를 눌러 파일을 만든 뒤 그 파일을 옮기세요.</div>
+      <button class="btn btn-dark btn-block" id="exportHtmlTop">새 index.html 만들기</button>
+    </div>` : ''}
     <div class="asec" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span style="font-size:13px;font-weight:700;flex:1;min-width:120px">하단 여백 (기기 메뉴바 겹침 보정)</span>
       <input id="ed-bottomPad" type="number" min="0" max="120" step="2" style="width:80px;border:1px solid #d7dde3;border-radius:8px;padding:7px 9px;font-size:13px" value="${Math.max(0,Number(data.bottomPad)||0)}">
@@ -915,7 +922,14 @@ function renderAdmin(){
       ${data.logo?`<button class="btn btn-ghost btn-sm" id="clearLogo">기본값</button>`:''}
       <div style="width:100%;font-size:12px;color:#8a97a5;line-height:1.5">PNG 로고를 올리면 상단 가운데 로고가 교체됩니다. 바깥 여백은 자동으로 잘립니다.<br>비워두면 앱 폴더의 <b>logo.png</b> 를, 그것도 없으면 기본 필기체 로고를 씁니다.</div>
     </div>
-    <div class="asec">
+    <div class="admin-tabs">
+      <button data-at="posts" class="${adminTab==='posts'?'on':''}">게시물</button>
+      <button data-at="users" class="${adminTab==='users'?'on':''}">사용자</button>
+      <button data-at="dms" class="${adminTab==='dms'?'on':''}">DM</button>
+      <button data-at="stories" class="${adminTab==='stories'?'on':''}">스토리</button>
+    </div>
+    <div id="adminSec"></div>
+    <div class="asec" style="margin-top:14px">
       <h3>백업 / 복원 <span style="font-size:11px;color:#8a97a5;font-weight:400">저장 용량 약 ${storageKB()}KB</span></h3>
       <div class="hint" style="margin-top:0;margin-bottom:10px">지금 내용(게시물·사용자·DM·스토리·로고)을 파일 하나로 내보내고 다시 불러올 수 있습니다. 새 파일을 설치해 내용이 초기화된 뒤에도 이 파일로 되살릴 수 있습니다.</div>
       <button class="btn btn-ghost btn-block" id="exportBtn">내보내기 (파일 저장)</button>
@@ -923,14 +937,7 @@ function renderAdmin(){
       <input type="file" id="importFile" accept="application/json" style="display:none">
       <button class="btn btn-dark btn-block" id="exportHtmlBtn">새 index.html 만들기</button>
       <div class="hint">지금 내용을 그대로 담은 배포용 index.html 을 만듭니다. 이 파일로 폴더의 index.html 을 바꾸면, 다른 폰에 설치할 때도 이 내용이 그대로 들어갑니다.<br>현재 파일 버전 : ${esc(DATA_VERSION)}${hasLocalEdits()?' · <b style="color:#d63a2f">이 기기에서 수정한 내용 있음</b>':' · 파일 내용과 같음'}</div>
-    </div>
-    <div class="admin-tabs">
-      <button data-at="posts" class="${adminTab==='posts'?'on':''}">게시물</button>
-      <button data-at="users" class="${adminTab==='users'?'on':''}">사용자</button>
-      <button data-at="dms" class="${adminTab==='dms'?'on':''}">DM</button>
-      <button data-at="stories" class="${adminTab==='stories'?'on':''}">스토리</button>
-    </div>
-    <div id="adminSec"></div>`;
+    </div>`;
   body.querySelectorAll('[data-at]').forEach(b=> b.onclick=()=>{ adminTab=b.dataset.at; renderAdmin(); });
   $('#saveBottomPad').onclick = ()=>{ data.bottomPad = Math.max(0, Number($('#ed-bottomPad').value)||0); save(); applyBottomPad(); toast('하단 여백 저장됨'); };
   $('#pickLogo').onclick = ()=> pickLogoImage(url=>{ data.logo=url; save(); applyLogo(); renderAdmin(); });
@@ -938,6 +945,7 @@ function renderAdmin(){
   $('#importBtn').onclick = ()=> $('#importFile').click();
   $('#importFile').onchange = importData;
   $('#exportHtmlBtn').onclick = exportHtml;
+  const eht=$('#exportHtmlTop'); if(eht) eht.onclick = exportHtml;
   const cl=$('#clearLogo'); if(cl) cl.onclick=()=>{ data.logo=''; save(); applyLogo(); renderAdmin(); };
   if(adminTab==='posts') renderAdminPosts();
   else if(adminTab==='users') renderAdminMe();
