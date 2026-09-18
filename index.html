@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="ko"><head>
+<html lang="ko">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -198,6 +199,11 @@
   .dm-share svg { width:18px; height:18px; color:#262626; }
   /* 가운데 날짜·시간 구분선 */
   .dm-stamp { text-align:center; font-size:12.5px; color:#8e8e8e; padding:14px 10px 10px; }
+  /* 단톡 : 보낸 사람 이름, 겹친 프로필 사진 */
+  .dm-sender { font-size:11.5px; color:#8e8e8e; margin:8px 0 3px 34px; }
+  .av-stack { position:relative; flex-shrink:0; }
+  .av-stack > div { position:absolute; border-radius:50%; overflow:hidden; border:2px solid #fff; background:#efefef; }
+  .av-stack img { width:100%; height:100%; object-fit:cover; }
 
   .dm-inputbar { flex-shrink:0; display:flex; align-items:center; gap:9px;
     padding:8px 12px calc(10px + env(safe-area-inset-bottom, 0px) + var(--safe-b)); background:#fff; }
@@ -329,6 +335,17 @@
   .story-thumb img { width:100%; height:100%; object-fit:cover; }
   .hint { font-size:12px; color:#98a5b2; line-height:1.6; margin-top:8px; }
   .sub-item { border:1px solid #e3e7ec; border-radius:9px; padding:9px; margin-bottom:8px; background:#fafbfc; }
+  /* 대화 편집 : 보낸 사람에 따라 좌·우로 놓는다 (카카오톡과 같은 방식) */
+  .msg-ed { border:1px solid #e3e7ec; border-radius:10px; padding:10px; margin-bottom:9px;
+    background:#fafbfc; max-width:88%; }
+  .msg-ed.mine { margin-left:auto; background:#f6f1ff; border-color:#ddd0f5; }
+  .msg-ed .who { font-size:11.5px; font-weight:700; color:#8a97a5; margin-bottom:7px; }
+  .msg-ed.mine .who { color:#7a4fd0; text-align:right; }
+  .add-row { display:flex; gap:8px; align-items:center; margin-top:12px; }
+  .add-row .left { display:flex; gap:6px; align-items:center; flex:1; min-width:0; }
+  .add-row .left select { flex:0 1 150px; min-width:0; border:1px solid #d7dde3; border-radius:8px;
+    padding:7px 9px; font-size:13px; }
+  .add-row .right { margin-left:auto; }
 
   /* ── 스토리 뷰어 (손님 모드) ── */
   #storyScreen { background:#000; }
@@ -370,22 +387,22 @@
 </style>
 </head>
 <body>
-<div id="phone" style="">
+<div id="phone">
   <div class="mode-pill" id="modePill">관리자 모드</div>
 
   <!-- 홈 피드 -->
   <div class="screen active" id="feedScreen">
     <div class="ig-head feed-head">
       <button class="hbtn" id="btnPlus" aria-label="만들기">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4.5v15M4.5 12h15"></path></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4.5v15M4.5 12h15"/></svg>
       </button>
       <div class="logo" id="feedLogo"><span class="logo-text">Instagram</span></div>
       <div class="head-right">
         <button class="hbtn" id="btnNotes" aria-label="노트">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.2" y="2.8" width="17.6" height="18.4" rx="4.5"></rect><path d="M12 7.2l1.45 2.95 3.25.47-2.35 2.29.55 3.24L12 14.62l-2.9 1.53.55-3.24-2.35-2.29 3.25-.47z"></path></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.2" y="2.8" width="17.6" height="18.4" rx="4.5"/><path d="M12 7.2l1.45 2.95 3.25.47-2.35 2.29.55 3.24L12 14.62l-2.9 1.53.55-3.24-2.35-2.29 3.25-.47z"/></svg>
         </button>
         <button class="hbtn" id="btnActivity" aria-label="활동">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11z"></path></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11z"/></svg>
           <span class="badge-dot"></span>
         </button>
       </div>
@@ -397,7 +414,7 @@
   <!-- 게시물 상세 -->
   <div class="screen" id="postScreen">
     <div class="ig-head">
-      <button class="back" data-back="">‹</button>
+      <button class="back" data-back>‹</button>
       <div class="htitle">게시물</div>
     </div>
     <div class="scroll" id="postScroll"></div>
@@ -406,8 +423,8 @@
   <!-- 프로필 -->
   <div class="screen" id="profileScreen">
     <div class="ig-head">
-      <button class="back" data-back="" id="profBack" style="display:none">‹</button>
-      <div class="htitle" id="profHeadName"></div>
+      <button class="back" data-back id="profBack" style="display:none">‹</button>
+      <div class="htitle" id="profHeadName">프로필</div>
     </div>
     <div class="scroll" id="profileScroll"></div>
     <div class="tabbar" id="tabbarProfile"></div>
@@ -416,13 +433,13 @@
   <!-- DM 목록 -->
   <div class="screen" id="dmListScreen">
     <div class="dmlist-head">
-      <div class="dmlist-title"><span id="dmListTitle">seoyeon_p</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg><i class="reddot"></i></div>
+      <div class="dmlist-title"><span id="dmListTitle">사용자</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg><i class="reddot"></i></div>
       <span class="dmlist-compose">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M20 13.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.5"></path><path d="M17.4 3.6a2 2 0 0 1 2.8 2.8L12.8 13.8l-3.6.8.8-3.6z"></path></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M20 13.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.5"/><path d="M17.4 3.6a2 2 0 0 1 2.8 2.8L12.8 13.8l-3.6.8.8-3.6z"/></svg>
       </span>
     </div>
     <div class="dm-searchwrap"><div class="dm-search">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#8e8e8e" stroke-width="2.2"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="#8e8e8e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
       <span>검색</span>
     </div></div>
     <div class="dm-sectionhead"><b>메시지</b><span>요청</span></div>
@@ -433,29 +450,29 @@
   <!-- DM 대화 -->
   <div class="screen" id="dmThreadScreen">
     <div class="dmthread-head">
-      <button class="dmt-back" data-back="">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4"></path><path d="m10 6-6 6 6 6"></path></svg>
+      <button class="dmt-back" data-back>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4"/><path d="m10 6-6 6 6 6"/></svg>
       </button>
       <div class="av" id="dmThreadAv" style="width:34px;height:34px"></div>
       <div class="dmt-name" id="dmThreadName"></div>
       <span class="dmt-ico">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M16 21A13 13 0 0 1 3 8V5.5A1.5 1.5 0 0 1 4.5 4h2.8a1 1 0 0 1 1 .8l.66 3a1 1 0 0 1-.28.93L7.1 10.3a11.5 11.5 0 0 0 6.6 6.6l1.57-1.58a1 1 0 0 1 .93-.27l3 .65a1 1 0 0 1 .8 1v2.8A1.5 1.5 0 0 1 18.5 21z"></path></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M16 21A13 13 0 0 1 3 8V5.5A1.5 1.5 0 0 1 4.5 4h2.8a1 1 0 0 1 1 .8l.66 3a1 1 0 0 1-.28.93L7.1 10.3a11.5 11.5 0 0 0 6.6 6.6l1.57-1.58a1 1 0 0 1 .93-.27l3 .65a1 1 0 0 1 .8 1v2.8A1.5 1.5 0 0 1 18.5 21z"/></svg>
       </span>
       <span class="dmt-ico">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="2.5" y="6" width="13.5" height="12" rx="3.2"></rect><path d="m16 11.3 5.5-3.1v7.6L16 12.7z"></path></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="2.5" y="6" width="13.5" height="12" rx="3.2"/><path d="m16 11.3 5.5-3.1v7.6L16 12.7z"/></svg>
       </span>
     </div>
     <div class="dm-thread" id="dmThreadScroll"></div>
     <div class="dm-inputbar">
       <span class="dm-cam">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.8l1.1-1.8h6.2L15.7 6h2.8A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"></path><circle cx="12" cy="12.3" r="3.4"></circle></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.8l1.1-1.8h6.2L15.7 6h2.8A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/><circle cx="12" cy="12.3" r="3.4"/></svg>
       </span>
       <div class="dm-field">
         <span class="ph">메시지 보내기...</span>
-        <span class="dm-fico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"></rect><path d="M5 11.5a7 7 0 0 0 14 0M12 18.5V21"></path></svg></span>
-        <span class="dm-fico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="3"></rect><circle cx="8.6" cy="10" r="1.6"></circle><path d="m4 17 5-4.2 3.4 2.8 3-2.4L20 17"></path></svg></span>
-        <span class="dm-fico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20.5 4.5H6a2.5 2.5 0 0 0-2.5 2.5v10A2.5 2.5 0 0 0 6 19.5h7.5l7-7z"></path><path d="M13.5 19.5v-4.2a2 2 0 0 1 2-2h4.2"></path><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"></circle></svg></span>
-        <span class="dm-fico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path></svg></span>
+        <span class="dm-fico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5 11.5a7 7 0 0 0 14 0M12 18.5V21"/></svg></span>
+        <span class="dm-fico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="3"/><circle cx="8.6" cy="10" r="1.6"/><path d="m4 17 5-4.2 3.4 2.8 3-2.4L20 17"/></svg></span>
+        <span class="dm-fico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20.5 4.5H6a2.5 2.5 0 0 0-2.5 2.5v10A2.5 2.5 0 0 0 6 19.5h7.5l7-7z"/><path d="M13.5 19.5v-4.2a2 2 0 0 1 2-2h4.2"/><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+        <span class="dm-fico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></span>
       </div>
     </div>
   </div>
@@ -474,9 +491,9 @@
     </div>
     <div class="story-bottom">
       <div class="sfake">메시지 보내기</div>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11z"></path></svg>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-11.7 7.7L3 21l1.9-5.6A8.4 8.4 0 1 1 21 11.5z"></path></svg>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4 20-7z"></path></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-11.7 7.7L3 21l1.9-5.6A8.4 8.4 0 1 1 21 11.5z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
     </div>
   </div>
 
@@ -491,7 +508,7 @@
   </div>
 
   <!-- 관리자 패널 -->
-  <div id="adminOverlay" class="">
+  <div id="adminOverlay">
     <div class="admin-header">
       <h2>관리자</h2>
       <div class="row-actions">
@@ -499,13 +516,16 @@
         <button id="adminClose">닫기</button>
       </div>
     </div>
-    <div class="admin-body" id="adminBody" data-pane="tree"><div class="apane" id="paneTree"></div><div class="apane" id="paneList"></div><div class="apane" id="paneEdit"></div></div>
+    <div class="admin-body" id="adminBody" data-pane="tree">
+      <div class="apane" id="paneTree"></div>
+      <div class="apane" id="paneList"></div>
+      <div class="apane" id="paneEdit"></div>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
-  <div id="confirmBox" class=""><div class="confirm-card">
-    <div class="confirm-msg" id="confirmMsg">지금 화면에 열려 있는 상태로 파일을 만듭니다.
-기능이 바뀐 파일을 새로 받았다면 먼저 새로고침 후에 만들어 주세요.</div>
+  <div id="confirmBox"><div class="confirm-card">
+    <div class="confirm-msg" id="confirmMsg"></div>
     <div class="confirm-actions">
       <button class="btn btn-ghost" id="confirmNo">취소</button>
       <button class="btn btn-danger" id="confirmYes">삭제</button>
@@ -1226,6 +1246,8 @@ function normalizeGroup(g){
   g.dms.forEach(dm=>{
     if(!Array.isArray(dm.participants)) dm.participants = [];
     if(!Array.isArray(dm.only)) dm.only = [];
+    if(typeof dm.name !== 'string') dm.name = '';       /* 단톡방 이름 (1:1 은 빈칸) */
+    if(dm.participants.length <= 2) dm.name = '';
     (dm.messages||[]).forEach(m=>{ if(m.date===undefined) m.date=''; });
   });
 }
@@ -1751,6 +1773,39 @@ function dmPeer(dm){
   const otherId = (ps[0] === meId) ? ps[1] : (ps[1] === meId ? ps[0] : null);
   return otherId ? userById(otherId) : null;
 }
+/* ---------- 단톡(3명 이상) ---------- */
+function dmIsGroup(dm){ return ((dm && dm.participants) || []).length > 2; }
+/* 나를 뺀 참여자 (내 계정이 없으면 참여자 전원) */
+function dmOthers(dm){
+  const meId = (mainUser()||{}).id;
+  return ((dm && dm.participants) || []).filter(x=> x !== meId).map(userById).filter(Boolean);
+}
+function dmMembers(dm){ return ((dm && dm.participants) || []).map(userById).filter(Boolean); }
+/* 손님 화면에 보일 대화방 이름 : 단톡은 방 이름(없으면 참여자 아이디), 1:1 은 상대 아이디 */
+function dmTitle(dm){
+  if(dmIsGroup(dm)) return (dm.name || '').trim() || dmOthers(dm).map(u=>u.username).join(', ') || '그룹 대화';
+  const p = dmPeer(dm);
+  return p ? p.username : '대화';
+}
+/* 관리자 목록용 이름 (내 계정과 상관없이 늘 같게 보인다) */
+function dmAdminLabel(dm){
+  const names = dmMembers(dm).map(u=>'@'+u.username);
+  if(dmIsGroup(dm)) return ((dm.name||'').trim() || '단톡방') + ' — ' + names.join(', ');
+  return names.join('  ↔  ') || '대화';
+}
+/* 단톡 프로필 : 사진 두 장을 겹쳐 놓는다 (인스타그램 방식) */
+function avatarStackHTML(users, size){
+  const us = (users||[]).slice(0,2);
+  if(us.length < 2) return avatarHTML(us[0]||null, size, false);
+  const s = Math.round(size*0.68);
+  const inner = u => (u && u.avatar) ? `<img src="${u.avatar}">` : defaultAvatar();
+  return `<div class="av-stack" style="width:${size}px;height:${size}px">
+    <div style="width:${s}px;height:${s}px;left:0;top:0">${inner(us[0])}</div>
+    <div style="width:${s}px;height:${s}px;right:0;bottom:0">${inner(us[1])}</div></div>`;
+}
+function dmAvatarHTML(dm, size){
+  return dmIsGroup(dm) ? avatarStackHTML(dmOthers(dm), size) : avatarHTML(dmPeer(dm)||null, size, false);
+}
 /* 내 계정이 참여한 대화만 손님 화면에 보인다 */
 function myDMs(){
   const meId = (mainUser()||{}).id;
@@ -1763,12 +1818,17 @@ function renderDMList(){
   const list = myDMs();
   if(!list.length){ const e=document.createElement('div'); e.className='empty'; e.textContent='대화가 없습니다.'; box.appendChild(e); return; }
   list.forEach(dm=>{
-    const u=dmPeer(dm)||{username:'unknown'};
     const last=dm.messages[dm.messages.length-1];
-    const lastText = last ? (last.image?'사진':last.text) : '';
+    let lastText = last ? (last.image?'사진':last.text) : '';
+    /* 단톡은 마지막으로 말한 사람 이름을 앞에 붙인다 */
+    if(last && dmIsGroup(dm)){
+      const su = userById(last.fromId);
+      const meId = (mainUser()||{}).id;
+      if(su) lastText = (last.fromId===meId ? '나' : su.username) + ': ' + lastText;
+    }
     /* 활동중·읽음 문구 없이, 마지막 메시지만 */
     const it=document.createElement('div'); it.className='dm-item';
-    it.innerHTML = `${avatarHTML(u,56,false)}<div class="dm-meta"><div class="dm-name">${esc(u.username)}</div><div class="dm-last">${esc(lastText)}</div></div>`;
+    it.innerHTML = `${dmAvatarHTML(dm,56)}<div class="dm-meta"><div class="dm-name">${esc(dmTitle(dm))}</div><div class="dm-last">${esc(lastText)}</div></div>`;
     it.onclick = ()=> navDMThread(dm.id);
     box.appendChild(it);
   });
@@ -1777,22 +1837,39 @@ let curDM=null;
 const dmShareIcon = `<span class="dm-share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg></span>`;
 function navDMThread(dmid){
   curDM=dmid; showScreen('dmThreadScreen', true);
-  const dm=L().dms.find(d=>d.id===dmid); const u=dmPeer(dm)||{username:'unknown'};
+  const dm=L().dms.find(d=>d.id===dmid);
   const meId=(mainUser()||{}).id;
-  $('#dmThreadAv').innerHTML = u.avatar?`<img src="${u.avatar}">`:defaultAvatar();
-  $('#dmThreadName').innerHTML = `${esc(u.username)}${u.verified?verifiedBadge:''}<span class="after">›</span>`;
+  const group = dmIsGroup(dm);
+  const u=dmPeer(dm)||{username:'unknown'};
+  /* 머리글 : 단톡은 겹친 사진 + 방 이름 + 인원수 */
+  if(group){
+    const av=$('#dmThreadAv');
+    av.innerHTML = avatarStackHTML(dmOthers(dm), 34);
+    $('#dmThreadName').innerHTML = `${esc(dmTitle(dm))} <span style="color:#8e8e8e;font-weight:400">${dmMembers(dm).length}</span><span class="after">›</span>`;
+  } else {
+    $('#dmThreadAv').innerHTML = u.avatar?`<img src="${u.avatar}">`:defaultAvatar();
+    $('#dmThreadName').innerHTML = `${esc(u.username)}${u.verified?verifiedBadge:''}<span class="after">›</span>`;
+  }
   const box=$('#dmThreadScroll'); box.innerHTML='';
-  let prevStamp='';
+  let prevStamp='', prevFrom='';
   dm.messages.forEach(m=>{
     const st = stampOf(m);
     if(st && st !== prevStamp){
       const s=document.createElement('div'); s.className='dm-stamp'; s.textContent=st;
-      box.appendChild(s); prevStamp=st;
+      box.appendChild(s); prevStamp=st; prevFrom='';
     }
     const isMine = (m.fromId === meId);
+    const sender = userById(m.fromId) || (isMine ? null : u);
+    /* 단톡에서 상대가 바뀌면 그 위에 보낸 사람 아이디를 적는다 */
+    if(group && !isMine && m.fromId !== prevFrom){
+      const n=document.createElement('div'); n.className='dm-sender';
+      n.textContent = (sender && sender.username) || '';
+      box.appendChild(n);
+    }
+    prevFrom = m.fromId;
     const row=document.createElement('div'); row.className='dm-row'+(isMine?' mine':'');
     let inner='';
-    if(!isMine) inner += `<div class="dm-av">${u.avatar?`<img src="${u.avatar}">`:defaultAvatar()}</div>`;
+    if(!isMine) inner += `<div class="dm-av">${(sender&&sender.avatar)?`<img src="${sender.avatar}">`:defaultAvatar()}</div>`;
     if(m.image) inner += `<div class="dm-img"><img src="${m.image}"></div>${dmShareIcon}`;
     else inner += `<div class="dm-bubble">${esc(m.text)}</div>`;
     row.innerHTML=inner; box.appendChild(row);
@@ -2378,10 +2455,19 @@ function renderEditUser(uid){
   const va=$('#u-viewas');
   if(va) va.onclick=()=>{ setViewAs(uid); renderFeed(); editUser(uid); toast('이 계정으로 보도록 바꿨습니다'); };
   const del=$('#u-del');
-  if(del) del.onclick=()=> confirmDialog(`@${u.username} 계정을 삭제할까요?\n이 사람의 게시물·댓글·DM도 함께 사라집니다.`, ()=>{
+  if(del) del.onclick=()=> confirmDialog(`@${u.username} 계정을 삭제할까요?\n이 사람의 게시물·댓글과 1:1 대화가 함께 사라집니다.\n단톡방은 이 사람만 빠지고 그대로 남습니다.`, ()=>{
     L().posts = L().posts.filter(p=>p.userId!==uid);
     L().posts.forEach(p=> p.comments=(p.comments||[]).filter(c=>c.userId!==uid));
-    L().dms = L().dms.filter(d=> (d.participants||[]).indexOf(uid) < 0);
+    /* 단톡방은 그 사람만 빼고 남긴다. 1:1 대화만 방째 사라진다 */
+    L().dms.forEach(d=>{
+      if((d.participants||[]).indexOf(uid) < 0) return;
+      if(d.participants.length > 2){
+        d.participants = d.participants.filter(x=>x!==uid);
+        d.messages = (d.messages||[]).filter(m=> m.fromId !== uid);
+        if(d.participants.length <= 2) d.name = '';
+      }
+    });
+    L().dms = L().dms.filter(d=> (d.participants||[]).indexOf(uid) < 0);   /* 남은 것은 1:1 대화뿐 */
     L().users = L().users.filter(x=>x.id!==uid);
     if(viewAsId === uid) setViewAs((L().users[0]||{}).id || '');
     save(); renderFeed(); closeEdit();
@@ -2668,21 +2754,32 @@ function renderCmtEditors(p, pid){
 function renderAdminDMs(){
   const sec=$('#adminSec');
   if(!L().users.length){ sec.innerHTML=`<div class="asec"><div class="hint">먼저 “사용자” 탭에서 사용자를 추가하세요.</div></div>`; return; }
-  let html=`<div class="asec"><h3>DM 대화 <button class="btn btn-dark btn-sm" id="addDM">＋ 추가</button></h3>`;
+  let html=`<div class="asec"><h3>DM 대화 <span style="display:flex;gap:6px">
+      <button class="btn btn-dark btn-sm" id="addDM">＋ 1:1</button>
+      <button class="btn btn-dark btn-sm" id="addGroupDM">＋ 단톡</button></span></h3>`;
   if(!L().dms.length) html+=`<div class="hint">대화가 없습니다.</div>`;
   L().dms.forEach(dm=>{
-    const ps=(dm.participants||[]).map(x=>{ const u=userById(x); return u?('@'+u.username):'?'; });
+    const group = dmIsGroup(dm);
     html += `<div class="alist-item"><div class="top">
-      <div class="nm">${esc(ps.join('  ↔  '))}</div>
+      <div class="nm">${group?'👥 ':''}${esc(dmAdminLabel(dm))}</div>
       <button class="btn btn-ghost btn-sm" data-edm="${dm.id}">편집</button>
-    </div><div class="sub">메시지 ${dm.messages.length}개</div></div>`;
+    </div><div class="sub">${group?`단톡방 · 참여자 ${(dm.participants||[]).length}명 · `:''}메시지 ${dm.messages.length}개${(dm.only&&dm.only.length)?' · 👁 일부 계정만':''}</div></div>`;
   });
-  html+=`<div class="hint">대화는 참여자 <b>두 명</b>으로 저장됩니다. 그래서 “내 계정”을 바꾸면 같은 대화가 <b>반대편 시점</b>으로 자동으로 뒤집혀 보입니다.<br>손님 화면에는 내 계정이 참여한 대화만 나옵니다.</div></div>`;
+  html+=`<div class="hint">대화에는 <b>참여한 계정</b>이 저장됩니다. 그래서 “내 계정”을 바꾸면 같은 대화가 <b>그 사람 시점</b>으로 자동으로 뒤집혀 보입니다.<br>
+    참여자가 <b>3명 이상이면 단톡방</b>이 되고, 방 이름을 직접 정할 수 있습니다.<br>손님 화면에는 내 계정이 참여한 대화만 나옵니다.</div></div>`;
   sec.innerHTML=html;
   $('#addDM').onclick=()=>{
     const me=mainUser()||L().users[0]; if(!me){ toast('먼저 계정을 추가하세요'); return; }
     const other=L().users.find(u=>u!==me)||me;
-    const dm={id:id(),participants:[me.id, other.id],messages:[]}; L().dms.push(dm); save(); editDM(dm.id);
+    const dm={id:id(),name:'',participants:[me.id, other.id],only:[],messages:[]}; L().dms.push(dm); save(); editDM(dm.id);
+  };
+  $('#addGroupDM').onclick=()=>{
+    const us=L().users;
+    if(us.length < 3){ toast('단톡방은 계정이 3개 이상일 때 만들 수 있습니다'); return; }
+    const me=mainUser()||us[0];
+    const rest=us.filter(u=>u!==me).slice(0,2);
+    const dm={id:id(), name:'단톡방', participants:[me.id, ...rest.map(u=>u.id)], only:[], messages:[]};
+    L().dms.push(dm); save(); editDM(dm.id);
   };
   sec.querySelectorAll('[data-edm]').forEach(b=> b.onclick=()=> editDM(b.dataset.edm));
 }
@@ -2690,38 +2787,108 @@ function editDM(dmid){ openEdit('dm', dmid); }
 function renderEditDM(dmid){
   const dm=L().dms.find(d=>d.id===dmid); if(!dm){ closeEdit(); return; }
   const sec=$('#paneEdit');
-  const sel=(cur)=> L().users.map(u=>`<option value="${u.id}" ${u.id===cur?'selected':''}>@${esc(u.username)}</option>`).join('');
+  dm.participants = dm.participants || [];
+  const group = dmIsGroup(dm);
+  const notIn = L().users.filter(u=> dm.participants.indexOf(u.id) < 0);
+  const rows = dm.participants.map((pid,i)=>{
+    const u = userById(pid);
+    return `<div class="sub-item" style="display:flex;align-items:center;gap:9px;padding:8px 9px">
+        ${avatarHTML(u,30,false)}
+        <div style="flex:1;min-width:0;font-size:13px;font-weight:600">@${esc(u?u.username:'?')}</div>
+        ${(pid===viewAsId)?'<span style="font-size:11px;color:#0095f6;font-weight:700">내 계정</span>':''}
+        <button class="btn btn-ghost btn-sm" data-pup="${i}" ${i===0?'disabled':''}>▲</button>
+        <button class="btn btn-danger btn-sm" data-pdel="${i}" ${dm.participants.length<=2?'disabled':''}>빼기</button>
+      </div>`;
+  }).join('');
   sec.innerHTML = `
     <button class="btn btn-ghost btn-sm pane-back" id="backDMs" style="margin-bottom:12px">‹ 목록으로</button>
     <div class="asec">
-      <h3>대화 참여자</h3>
-      <div class="frow">
-        <div class="field"><label>참여자 1</label><select id="dm-p0">${sel(dm.participants[0])}</select></div>
-        <div class="field"><label>참여자 2</label><select id="dm-p1">${sel(dm.participants[1])}</select></div>
-      </div>
-      <div class="hint">“내 계정”인 쪽이 오른쪽(보라 그라데이션)에 표시됩니다.<br>나중에 다른 계정을 내 계정으로 바꾸면 이 대화도 자동으로 그 시점으로 뒤집힙니다.</div>
+      <h3>${group?'단톡방':'대화'} 참여자 <span style="font-size:11px;color:#8a97a5;font-weight:400">${dm.participants.length}명</span></h3>
+      ${group?`<div class="field"><label>단톡방 이름 (목록·대화 위에 표시)</label>
+          <input id="dm-name" value="${esc(dm.name||'')}" placeholder="예) 그날 밤 멤버"></div>`:''}
+      ${rows}
+      ${notIn.length?`<div class="add-row"><select id="dm-addwho">${notIn.map(u=>`<option value="${u.id}">@${esc(u.username)}</option>`).join('')}</select>
+          <button class="btn btn-dark btn-sm right" id="dm-addp">＋ 참여자 추가</button></div>`
+        :`<div class="hint" style="margin-top:8px">모든 계정이 이미 참여하고 있습니다.</div>`}
+      <div class="hint">참여자가 <b>3명 이상이면 단톡방</b>이 됩니다.<br>
+        “내 계정”인 사람이 오른쪽(보라 그라데이션)에 표시되고, 내 계정을 바꾸면 이 대화도 자동으로 그 시점으로 뒤집힙니다.</div>
       ${onlyFieldsHTML(dm, 'dm')}
     </div>
     <div class="asec">
-      <h3>메시지 <button class="btn btn-dark btn-sm" id="addMsg">＋ 추가</button></h3>
+      <h3>대화 내용</h3>
       <div class="hint" style="margin-top:0;margin-bottom:10px">날짜는 <b>20250504</b> → 2025년 5월 4일, 시간은 <b>1103</b> → 오전 11:03 으로 바뀝니다.<br>(그대로 적고 싶으면 “7월 18일”, “오후 9:32” 처럼 적으면 됩니다)</div>
       <div id="dmMsgList"></div>
+      <div class="add-row" id="dmAddRow"></div>
     </div>
     <div class="asec"><button class="btn btn-danger btn-block" id="dm-del">이 대화 삭제</button></div>`;
   $('#backDMs').onclick=()=>{ save(); closeEdit(); };
   wireOnlyFields(dm, 'dm', ()=> renderAdminDMs());
-  $('#dm-p0').onchange=e=>{ dm.participants[0]=e.target.value; save(); editDM(dmid); };
-  $('#dm-p1').onchange=e=>{ dm.participants[1]=e.target.value; save(); editDM(dmid); };
-  $('#addMsg').onclick=()=>{ dm.messages.push({id:id(),fromId:dm.participants[1],text:'',image:'',date:'',time:''}); save(); editDM(dmid); };
-  $('#dm-del').onclick=()=> confirmDialog('이 대화를 삭제할까요?', ()=>{ L().dms=L().dms.filter(d=>d.id!==dmid); save(); renderAdminDMs(); });
+  const nm=$('#dm-name'); if(nm) nm.oninput=e=>{ dm.name=e.target.value; save(); };
+  sec.querySelectorAll('[data-pdel]').forEach(b=> b.onclick=()=>{
+    const i=Number(b.dataset.pdel), pid=dm.participants[i];
+    dm.participants.splice(i,1);
+    /* 빠진 사람이 보낸 메시지는 남은 첫 사람 이름으로 옮겨 둔다 (메시지를 잃지 않게) */
+    dm.messages.forEach(m=>{ if(m.fromId===pid) m.fromId = dm.participants[0]; });
+    if(dm.participants.length <= 2) dm.name = '';      /* 둘만 남으면 1:1 대화로 */
+    save(); editDM(dmid); renderAdminDMs();
+  });
+  sec.querySelectorAll('[data-pup]').forEach(b=> b.onclick=()=>{
+    const i=Number(b.dataset.pup);
+    if(i>0){ [dm.participants[i-1],dm.participants[i]]=[dm.participants[i],dm.participants[i-1]]; save(); editDM(dmid); }
+  });
+  const ap=$('#dm-addp');
+  if(ap) ap.onclick=()=>{
+    const v=$('#dm-addwho').value; if(!v) return;
+    if(dm.participants.indexOf(v)<0) dm.participants.push(v);
+    if(dmIsGroup(dm) && !dm.name) dm.name = '단톡방';
+    save(); editDM(dmid); renderAdminDMs();
+  };
+  $('#dm-del').onclick=()=> confirmDialog('이 대화를 삭제할까요?', ()=>{ L().dms=L().dms.filter(d=>d.id!==dmid); save(); closeEdit(); renderAdminDMs(); });
   renderDMMsgEditors(dm, dmid);
+}
+/* 대화 편집에서 “나”로 볼 사람 : 이 기기에서 고른 계정이 참여 중이면 그 사람, 아니면 첫 참여자 */
+function dmEditorMe(dm){
+  const ps = dm.participants || [];
+  return (ps.indexOf(viewAsId) >= 0) ? viewAsId : (ps[0] || '');
+}
+/* 메시지 추가 버튼 (카카오톡처럼 목록 아래에 둔다) */
+function renderDMAddRow(dm, dmid){
+  const row=$('#dmAddRow'); if(!row) return;
+  const meId = dmEditorMe(dm);
+  const me = userById(meId);
+  const others = (dm.participants||[]).filter(x=> x!==meId).map(userById).filter(Boolean);
+  const last = dm.messages[dm.messages.length-1];
+  const lastOther = (last && last.fromId!==meId) ? last.fromId : ((others[0]||{}).id||'');
+  row.innerHTML = `
+    <div class="left">
+      ${others.length>1?`<select id="dmAddWho">${others.map(u=>`<option value="${u.id}" ${u.id===lastOther?'selected':''}>@${esc(u.username)}</option>`).join('')}</select>`:''}
+      <button class="btn btn-ghost btn-sm" id="dmAddOther">＋ ${others.length>1?'상대 메시지':'@'+esc((others[0]||{}).username||'상대')}</button>
+    </div>
+    <button class="btn btn-dark btn-sm right" id="dmAddMine">＋ @${esc(me?me.username:'나')}</button>`;
+  const push = who=>{
+    if(!who){ toast('참여자를 먼저 추가하세요'); return; }
+    const prev = dm.messages[dm.messages.length-1];
+    dm.messages.push({id:id(), fromId:who, text:'', image:'', date:'', time: prev?prev.time:''});
+    save(); renderDMMsgEditors(dm, dmid);
+    const box=$('#dmMsgList'); const el=box?box.lastElementChild:null;
+    if(el){ el.scrollIntoView({block:'center'}); const ta=el.querySelector('[data-mf="text"]'); if(ta) ta.focus(); }
+  };
+  const ao=$('#dmAddOther');
+  if(ao) ao.onclick=()=>{ const s=$('#dmAddWho'); push(s? s.value : ((others[0]||{}).id||'')); };
+  const am=$('#dmAddMine'); if(am) am.onclick=()=> push(meId);
 }
 function renderDMMsgEditors(dm, dmid){
   const box=$('#dmMsgList'); box.innerHTML='';
-  if(!dm.messages.length){ box.innerHTML=`<div class="hint">메시지가 없습니다.</div>`; return; }
+  renderDMAddRow(dm, dmid);
+  if(!dm.messages.length){ box.innerHTML=`<div class="hint">메시지가 없습니다. 아래 <b>＋</b> 버튼으로 추가하세요.</div>`; return; }
+  const meId = dmEditorMe(dm);
   dm.messages.forEach((m,i)=>{
-    const ed=document.createElement('div'); ed.className='sub-item';
+    const su = userById(m.fromId);
+    const mine = (m.fromId === meId);
+    /* 보낸 사람이 “나”면 오른쪽, 아니면 왼쪽 — 손님 화면과 같은 방향 */
+    const ed=document.createElement('div'); ed.className='msg-ed'+(mine?' mine':'');
     ed.innerHTML = `
+      <div class="who">@${esc(su?su.username:'?')}${mine?' (내 계정)':''}</div>
       <div class="frow" style="margin-bottom:6px;align-items:center">
         <select data-mf="from">${(dm.participants||[]).map(x=>{ const u=userById(x); return `<option value="${x}" ${m.fromId===x?'selected':''}>@${esc(u?u.username:'?')}</option>`; }).join('')}</select>
         <input data-mf="date" placeholder="20250504" value="${esc(m.date||'')}">
@@ -2736,7 +2903,8 @@ function renderDMMsgEditors(dm, dmid){
         <button class="btn btn-ghost btn-sm" data-mdn="${i}" ${i===dm.messages.length-1?'disabled':''} style="flex:0 0 auto">▼</button>
         <button class="btn btn-danger btn-sm" data-mdel="${i}" style="flex:0 0 auto">삭제</button>
       </div>`;
-    ed.querySelector('[data-mf="from"]').onchange=e=>{ m.fromId = e.target.value; save(); };
+    /* 보낸 사람이 바뀌면 좌·우 위치도 바로 따라가도록 다시 그린다 */
+    ed.querySelector('[data-mf="from"]').onchange=e=>{ m.fromId = e.target.value; save(); renderDMMsgEditors(dm,dmid); };
     const prev = ed.querySelector('[data-prev]');
     const refreshPrev = ()=>{ prev.innerHTML = esc(stampOf(m)) || '<span style="color:#c3ccd4">날짜·시간 없음</span>'; };
     ed.querySelector('[data-mf="date"]').oninput=e=>{ m.date=e.target.value; save(); refreshPrev(); };
@@ -3111,6 +3279,5 @@ if(wantReset){
   }
 })();
 </script>
-
-
-<input type="file" accept="image/*" style="position: fixed; left: -9999px; top: 0px; width: 1px; height: 1px; opacity: 0;"></body></html>
+</body>
+</html>
